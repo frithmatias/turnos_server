@@ -30,17 +30,18 @@ class Server {
         this.escucharSockets();
     }
     static get instance() {
-        return this._instance || (this._instance = new this()); // retorna si existe una instancia, sino la crea.
+        // retorna si existe una instancia, sino la crea.
+        return this._instance || (this._instance = new this());
     }
     // levantmos el server
     escucharSockets() {
-        // porque es privado? sólo se va a llamar desde la inicialización de la clase
+        // privado porque se llama sólo desde la inicialización de la clase
         console.log('Escuchando conexiones de sockets en el puerto ', this.port);
+        // Emisión de eventos
         this.io.on('connection', (cliente) => {
-            // Aca es donde yo emito todos los eventos
             console.log('Cliente conectado', cliente.id);
-            // Enviar novedades de turnos
-            socket.enviarNovedades(cliente, this.io);
+            // cliente.to(cliente.id).emit('adjuntar-sesion-ticket', cliente.id);
+            socket.escucharMensajes(cliente, this.io);
         });
     }
     start(callback) {

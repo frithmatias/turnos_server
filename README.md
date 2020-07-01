@@ -7,4 +7,4 @@ Generar el DIST
 `$tsc -w`
 
 Correr Nodemon 
-`nodemon ./dist`
+`nodemon ./server`

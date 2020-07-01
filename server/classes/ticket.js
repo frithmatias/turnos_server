@@ -1,79 +1,102 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class Ticket {
+const TIME_TO_NEXT = 500;
+class createTicket {
     constructor() {
-        this.ticket_id = 1;
+        this.ticket_id = 0;
         this.tickets = [];
     }
-    // REST API
     // VIENE DE LA PANTALLA CREAR TICKETS
-    getTicketNum() {
-        /*
-        ES Espera
-        LL Llamado
-        AT Atendido
-        PR Prescrito (cuando es llamado 3 veces)
-        */
-        const tiket = { id_ticket: this.ticket_id, id_desk: 0, status: 'ES' };
-        //this.tickets.push(tiket);
-        this.tickets[this.ticket_id] = tiket;
-        console.log(this.tickets[this.ticket_id]);
-        let id_tkt = this.ticket_id; // último ticket
-        this.ticket_id++; // próximo ticket a atender
-        return {
-            id_ticket: id_tkt
+    getNewTicket(id_socket) {
+        this.ticket_id++; // próximo ticket a atender.
+        const ticket = {
+            id_ticket: this.ticket_id,
+            id_socket: id_socket,
+            id_desk: null,
+            tm_start: new Date().getTime(),
+            tm_att: null,
+            tm_end: null
         };
+        this.tickets.push(ticket);
+        return ticket;
     }
-    getAllTickets() {
-        let atendidos = [];
-        const num = this.tickets.length;
-        console.log(this.tickets);
-        // for (let i = 0; i < num; i++) {
-        // 	if (this.tickets[i].id_desk != 0) {
-        // 		atendidos.push(this.tickets[i]);
-        // 	}
-        // }
-        return this.tickets;
-    }
-    // VIENE DE LA PANTALLA ESCRITORIO
-    atenderTicket(id_desk) {
-        console.log('id_desk', id_desk);
-        for (var i = 1; i < this.ticket_id; i++) {
-            // SE LLAMA AL SIGUIENTE EN ESPERA
-            if (this.tickets[i].status === 'ES') {
-                // cliente.broadcast.emit('escuchar-turnos', id);
-                const ticket = {
-                    id_ticket: i,
-                    id_desk: Number(id_desk),
-                    status: 'LL'
-                };
-                this.tickets[i] = ticket;
-                console.log('tickets', this.tickets);
-                return this.tickets[i];
-            }
-            console.log('ticket', this.tickets[i]);
-            console.log('id_desk en tickets', this.tickets[i].id_desk);
-            console.log('id_desk en escritorio', id_desk);
-            // LLAMADO RECIENTE SE PASA A ATENDIDO
-            if (this.tickets[i].status === 'LL' && this.tickets[i].id_desk == id_desk) {
-                this.tickets[i].status = 'AT';
-            }
-            if (i == this.ticket_id) {
-                // Se barrio el total de tickets y no hay ninguno en espara 'ES'
-                return false;
+    getTickets(id_ticket) {
+        let newTickets = [...this.tickets];
+        for (let ticket of newTickets) {
+            if (ticket.id_ticket !== id_ticket) {
+                ticket.id_socket = 'oops! :)';
             }
         }
-        console.log(this.tickets);
-        // 	//Si el estado del ticket es llamado y tiene número de escirtorio lo cierro como atendido.
-        // 	if (this.tickets[i]['status'] === 'LL' && this.tickets[i]['desk'] === id_desk) {
-        // 		this.tickets[i]['status'] = 'AT';
-        // 	}
-        // 	// Si el estado es ESPERA lo vuelco a la bandeja llamados.
-        // 	if (i == this.ticket_id) {
-        // 		// Se barrio el total de tickets y no hay ninguno en espara 'ES'
-        // 		return false;
-        // 	}
-        // }
+        return newTickets;
+        // return this.tickets;
+    }
+    getDesktopStatus(id_desk) {
+        let resp;
+        let pendingTicket = this.tickets.filter(ticket => ticket.id_desk == id_desk && ticket.tm_att !== null && ticket.tm_end === null);
+        if (pendingTicket[0]) {
+            resp = { ok: true, msg: 'Se encontró un ticket pendiente de resolución', ticket: pendingTicket[0] };
+            return resp;
+        }
+        else {
+            resp = { ok: false, msg: 'No se encontró un ticket pendiente de resolución', ticket: null };
+            return resp;
+        }
+    }
+    atenderTicket(id_desk) {
+        if (this.tickets.length === 0) {
+            this.tktRes = {
+                ok: false,
+                msg: 'No existen tickets en espera',
+                ticket: null
+            };
+            return this.tktRes;
+        }
+        for (let ticket of this.tickets) {
+            // el recientemente llamado desde el mismo escritorio fue atenedido
+            if (ticket.tm_att !== null && ticket.tm_end === null && ticket.id_desk == id_desk) {
+                // si el escritorio pide atender un nuevo cliente, debe esperar 1 minuto 
+                // a partir del momento en el que fue llamado.
+                let now = new Date().getTime();
+                if (ticket.tm_end === null && ticket.tm_att != null && (now - ticket.tm_att < TIME_TO_NEXT)) {
+                    let response = {
+                        ok: false,
+                        msg: 'Para atender otro reclamo debe esperar al menos 1 minuto',
+                        ticket: null
+                    };
+                    return response;
+                }
+                ticket.tm_end = new Date().getTime();
+            }
+            // el siguiente en espera es atendido
+            if (ticket.tm_att === null) {
+                ticket.tm_att = new Date().getTime();
+                ticket.id_desk = id_desk;
+                this.tktRes = {
+                    ok: true,
+                    msg: 'Ticket en espera encontrado',
+                    ticket
+                };
+                return this.tktRes;
+            }
+        }
+        // Se barrio el total de tickets y no hay ninguno en espera
+        this.tktRes = {
+            ok: false,
+            msg: 'Todos los tickets fueron atendidos',
+            ticket: null
+        };
+        return this.tktRes;
+    }
+    actualizarSocket(old_socket, new_socket) {
+        console.log(old_socket, new_socket);
+        let ticket = this.tickets.filter(ticket => ticket.id_socket === old_socket)[0];
+        if (ticket) {
+            ticket.id_socket = new_socket;
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 }
-exports.Ticket = Ticket;
+exports.createTicket = createTicket;
