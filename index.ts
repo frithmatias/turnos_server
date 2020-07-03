@@ -26,6 +26,7 @@ import express from 'express';
 const server = Server.instance; // obtenemos una nueva instancia de forma estática
 
 const publicPath = path.resolve(__dirname, '../public');
+console.log(__dirname);
 server.app.use(express.static(publicPath));
 
 // Lo que reciba por el body, lo toma y lo convierte en un objeto de JavaScript
