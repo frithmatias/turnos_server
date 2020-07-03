@@ -25,7 +25,7 @@ const express_1 = __importDefault(require("express"));
 // una UNICA instancia del servidor de socktes como de todas las propiedades de mi clase Server.
 // const server = new Server();
 const server = server_1.default.instance; // obtenemos una nueva instancia de forma estática
-const publicPath = path_1.default.resolve(__dirname, '../public');
+const publicPath = path_1.default.resolve(__dirname, '/public');
 server.app.use(express_1.default.static(publicPath));
 // Lo que reciba por el body, lo toma y lo convierte en un objeto de JavaScript
 server.app.use(body_parser_1.default.urlencoded({ extended: true }));

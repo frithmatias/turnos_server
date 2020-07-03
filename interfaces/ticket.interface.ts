@@ -12,6 +12,7 @@ export interface TicketResponse {
 export interface Ticket {
 	id_ticket: number;
 	id_socket: string;
+	id_socket_desk: string | null;
 	id_desk: number | null;
 	tm_start: number;
 	tm_att: number | null;

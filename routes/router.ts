@@ -1,13 +1,10 @@
-import { Router, Request, Response, response } from 'express';
-import Server from '../classes/server';
-import { Socket } from 'net';
-import { request } from 'http';
-import { createTicket } from '../classes/ticket';
+import { Router, Request, Response } from 'express';
+import { Tickets } from '../classes/ticket';
 
 const router = Router();
 
 // TICKETS
-const ticket = new createTicket();
+export const ticket = new Tickets(); // lo exporto para usarlo en sockets.ts.
 
 // VIENE DE LA PANTALLA CREAR TICKETS
 router.get('/nuevoticket/:id_socket', (req: Request, res: Response) => {
@@ -20,9 +17,9 @@ router.get('/nuevoticket/:id_socket', (req: Request, res: Response) => {
 });
 
 // VIENE DE LA PANTALLA ESCRITORIO
-router.get('/atenderticket/:id_desk', (req: Request, res: Response) => {
-	var id_desk = Number(req.params.id_desk);
-	res.json(ticket.atenderTicket(id_desk));
+router.post('/atenderticket', (req: Request, res: Response) => {
+	const {idDesk, idDeskSocket } = req.body;
+	res.json(ticket.atenderTicket(idDesk, idDeskSocket));
 });
 
 router.get('/pendingticket/:desk_id', (req: Request, res: Response) => {
@@ -31,11 +28,10 @@ router.get('/pendingticket/:desk_id', (req: Request, res: Response) => {
 });
 
 // VIENE DE LA PANTALLA PUBLICA
-router.get('/gettickets/:id_ticket', (req: Request, res: Response) => {
-	var id_ticket = Number(req.params.id_ticket); 
+router.get('/gettickets', (req: Request, res: Response) => {
 	res.json({
 		ok: true,
-		tickets: ticket.getTickets(id_ticket)
+		tickets: ticket.getTickets()
 	});
 });
 
