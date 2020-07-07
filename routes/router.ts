@@ -28,16 +28,17 @@ router.post('/atenderticket', (req: Request, res: Response) => {
 	    // creo una misma instancia corriendo en toda la app con el patrón singleton
 		const server = Server.instance; 
 		const pendingTickets = ticket.getPendingTickets();
-		server.io.emit('actualizar-pantalla');
-		server.io.emit('nuevo-turno', pendingTickets);
+		server.io.emit('actualizar-pantalla'); // para clientes
+		server.io.emit('nuevo-turno', pendingTickets); // para asistentes
 });
 
+// Escritorio al conectar
 router.get('/pendingticket/:desk_id', (req: Request, res: Response) => {
 	var desk_id = Number(req.params.desk_id);
-	res.json(ticket.getDesktopStatus(desk_id));
+	res.json(ticket.getDesktopStatus(desk_id)); 
 });
 
-// VIENE DE LA PANTALLA PUBLICA
+// Pantalla pública
 router.get('/gettickets', (req: Request, res: Response) => {
 	res.json({
 		ok: true,

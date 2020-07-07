@@ -83,14 +83,24 @@ class Tickets {
         return newTickets;
     }
     getDesktopStatus(id_desk) {
-        let resp;
         let pendingTicket = this.tickets.filter(ticket => ticket.id_desk == id_desk && ticket.tm_att !== null && ticket.tm_end === null);
+        let pendingTickets = this.getPendingTickets();
         if (pendingTicket[0]) {
-            resp = { ok: true, msg: 'Se encontró un ticket pendiente de resolución', ticket: pendingTicket[0] };
+            let resp = {
+                ok: true,
+                msg: 'Se encontró un ticket pendiente de resolución',
+                pending: pendingTickets,
+                ticket: pendingTicket[0]
+            };
             return resp;
         }
         else {
-            resp = { ok: false, msg: 'No se encontró un ticket pendiente de resolución', ticket: null };
+            let resp = {
+                ok: false,
+                msg: 'No se encontró un ticket pendiente de resolución',
+                pending: pendingTickets,
+                ticket: null
+            };
             return resp;
         }
     }
