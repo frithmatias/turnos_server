@@ -14,7 +14,7 @@ export const escucharMensajes = (cliente: Socket, io: socketIO.Server) => {
 	});
 
 	// Orden enviada por el cliente.
-	cliente.on('cliente-en-camino', (ticket: TicketResponse) => {
+	cliente.on('cliente-en-camino', () => {
 		const myDestination = getMyDestination(cliente);
 		io.to(myDestination).emit('cliente-en-camino');
 	});

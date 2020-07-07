@@ -8,7 +8,7 @@ exports.escucharMensajes = (cliente, io) => {
         cliente.broadcast.emit('actualizar-pantalla');
     });
     // Orden enviada por el cliente.
-    cliente.on('cliente-en-camino', (ticket) => {
+    cliente.on('cliente-en-camino', () => {
         const myDestination = getMyDestination(cliente);
         io.to(myDestination).emit('cliente-en-camino');
     });

@@ -1,7 +1,11 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const ticket_1 = require("../classes/ticket");
+const server_1 = __importDefault(require("../classes/server"));
 const router = express_1.Router();
 // TICKETS
 exports.ticket = new ticket_1.Tickets(); // lo exporto para usarlo en sockets.ts.
@@ -13,11 +17,20 @@ router.get('/nuevoticket/:id_socket', (req, res) => {
         msg: 'Ticket obtenido correctamente',
         ticket: exports.ticket.getNewTicket(id_socket)
     });
+    const server = server_1.default.instance;
+    const pendingTickets = exports.ticket.getPendingTickets();
+    //todo: crear dos salas. Una para escritorios y otra para clientes. Este mensaje es dirigido a escritorios.
+    server.io.emit('nuevo-turno', pendingTickets);
 });
 // VIENE DE LA PANTALLA ESCRITORIO
 router.post('/atenderticket', (req, res) => {
     const { idDesk, idDeskSocket } = req.body;
     res.json(exports.ticket.atenderTicket(idDesk, idDeskSocket));
+    // creo una misma instancia corriendo en toda la app con el patrón singleton
+    const server = server_1.default.instance;
+    const pendingTickets = exports.ticket.getPendingTickets();
+    server.io.emit('actualizar-pantalla');
+    server.io.emit('nuevo-turno', pendingTickets);
 });
 router.get('/pendingticket/:desk_id', (req, res) => {
     var desk_id = Number(req.params.desk_id);

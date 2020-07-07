@@ -71,6 +71,9 @@ class Tickets {
     getTickets() {
         return this.tickets;
     }
+    getPendingTickets() {
+        return this.tickets.filter(ticket => ticket.tm_att === null).length;
+    }
     getTicketsFilter() {
         let newTickets = [...this.tickets];
         for (let ticket of newTickets) {

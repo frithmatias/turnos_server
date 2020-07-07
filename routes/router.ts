@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { Tickets } from '../classes/ticket';
-
+import Server from '../classes/server';
 const router = Router();
 
 // TICKETS
@@ -14,12 +14,22 @@ router.get('/nuevoticket/:id_socket', (req: Request, res: Response) => {
 		msg: 'Ticket obtenido correctamente',
 		ticket: ticket.getNewTicket(id_socket)
 	});
+
+	const server = Server.instance; 
+	const pendingTickets = ticket.getPendingTickets();
+	//todo: crear dos salas. Una para escritorios y otra para clientes. Este mensaje es dirigido a escritorios.
+	server.io.emit('nuevo-turno', pendingTickets);
 });
 
 // VIENE DE LA PANTALLA ESCRITORIO
 router.post('/atenderticket', (req: Request, res: Response) => {
 	const {idDesk, idDeskSocket } = req.body;
 	res.json(ticket.atenderTicket(idDesk, idDeskSocket));
+	    // creo una misma instancia corriendo en toda la app con el patrón singleton
+		const server = Server.instance; 
+		const pendingTickets = ticket.getPendingTickets();
+		server.io.emit('actualizar-pantalla');
+		server.io.emit('nuevo-turno', pendingTickets);
 });
 
 router.get('/pendingticket/:desk_id', (req: Request, res: Response) => {
