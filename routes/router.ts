@@ -15,27 +15,48 @@ router.get('/nuevoticket/:id_socket', (req: Request, res: Response) => {
 		ticket: ticket.getNewTicket(id_socket)
 	});
 
-	const server = Server.instance; 
-	const pendingTickets = ticket.getPendingTickets();
+	const server = Server.instance;
+	const numTickets = ticket.getPendingTickets();
 	//todo: crear dos salas. Una para escritorios y otra para clientes. Este mensaje es dirigido a escritorios.
-	server.io.emit('nuevo-turno', pendingTickets);
+	server.io.emit('nuevo-turno', numTickets);
 });
 
 // VIENE DE LA PANTALLA ESCRITORIO
 router.post('/atenderticket', (req: Request, res: Response) => {
-	const {idDesk, idDeskSocket } = req.body;
+	const { idDesk, idDeskSocket } = req.body;
 	res.json(ticket.atenderTicket(idDesk, idDeskSocket));
-	    // creo una misma instancia corriendo en toda la app con el patrón singleton
-		const server = Server.instance; 
-		const pendingTickets = ticket.getPendingTickets();
-		server.io.emit('actualizar-pantalla'); // para clientes
-		server.io.emit('nuevo-turno', pendingTickets); // para asistentes
+	// creo una misma instancia corriendo en toda la app con el patrón singleton
+	const server = Server.instance;
+	const numTickets = ticket.getPendingTickets();
+	server.io.emit('actualizar-pantalla'); // para clientes
+	server.io.emit('nuevo-turno', numTickets); // para asistentes
+});
+
+router.post('/devolverticket', (req: Request, res: Response) => {
+	const { idDesk } = req.body;
+	// const ticketToRollback = ticket.getDesktopStatus(idDesk);
+	// const socketCli = ticketToRollback.ticket?.id_socket;
+	res.json(ticket.devolverTicket(idDesk));
+	const server = Server.instance;
+	const numTickets = ticket.getPendingTickets();
+	server.io.emit('nuevo-turno', numTickets); // para asistentes
+	server.io.emit('actualizar-pantalla'); // para clientes
+});
+
+router.post('/finalizarticket', (req: Request, res: Response) => {
+	const { idDesk } = req.body;
+	const ticketToEnd = ticket.getDesktopStatus(idDesk);
+	const socketCli = ticketToEnd.ticket?.id_socket;
+	res.json(ticket.finalizarTicket(idDesk));
+	const server = Server.instance;
+	// se actualiza la pantalla SOLO del cliente con el turno finalizado
+	if(socketCli){server.io.to(socketCli).emit('actualizar-pantalla');}
 });
 
 // Escritorio al conectar
 router.get('/pendingticket/:desk_id', (req: Request, res: Response) => {
 	var desk_id = Number(req.params.desk_id);
-	res.json(ticket.getDesktopStatus(desk_id)); 
+	res.json(ticket.getDesktopStatus(desk_id));
 });
 
 // Pantalla pública

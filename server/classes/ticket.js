@@ -63,9 +63,59 @@ class Tickets {
         // Se barrio el total de tickets y no hay ninguno en espera
         this.tktRes = {
             ok: false,
-            msg: 'Todos los tickets fueron atendidos',
+            msg: 'No hay turnos pendientes',
             ticket: null
         };
+        return this.tktRes;
+    }
+    devolverTicket(idDesk) {
+        if (this.tickets.length === 0) {
+            this.tktRes = {
+                ok: false,
+                msg: 'No existen tickets en espera',
+                ticket: null
+            };
+            return this.tktRes;
+        }
+        for (let ticket of this.tickets) {
+            if (ticket.tm_att !== null && ticket.tm_end === null && ticket.id_desk == idDesk) {
+                ticket.tm_att = null;
+                this.tktRes = {
+                    ok: false,
+                    msg: 'Turno devuelto.',
+                    ticket: null
+                };
+                break;
+            }
+        }
+        if (!this.tktRes) {
+            this.tktRes = { ok: false, msg: 'No se encontro el ticket', ticket: null };
+        }
+        return this.tktRes;
+    }
+    finalizarTicket(idDesk) {
+        if (this.tickets.length === 0) {
+            this.tktRes = {
+                ok: false,
+                msg: 'No existen tickets en espera',
+                ticket: null
+            };
+            return this.tktRes;
+        }
+        for (let ticket of this.tickets) {
+            if (ticket.tm_att !== null && ticket.tm_end === null && ticket.id_desk == idDesk) {
+                ticket.tm_end = new Date().getTime();
+                this.tktRes = {
+                    ok: false,
+                    msg: 'Turno finalizado.',
+                    ticket: null
+                };
+                break;
+            }
+        }
+        if (!this.tktRes) {
+            this.tktRes = { ok: false, msg: 'No se encontro el ticket', ticket: null };
+        }
         return this.tktRes;
     }
     getTickets() {
