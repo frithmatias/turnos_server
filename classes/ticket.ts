@@ -169,7 +169,7 @@ export class Tickets {
 		}
 	}
 
-	actualizarSocket(old_socket: string, new_socket: string) {
+	public actualizarSocket(old_socket: string, new_socket: string) {
 		// el ticket que tengo que actualizar es el que tenía el antiguo socket y ademas tm_end === null por si tenía un ticket 
 		// con anterioridad ya atendido.
 		let ticket: Ticket = this.tickets.filter(ticket => (ticket.id_socket === old_socket) && ticket.tm_end === null)[0];

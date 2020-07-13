@@ -7,11 +7,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 //import { SERVER_PORT } from "./global/environment";
 const server_1 = __importDefault(require("./classes/server"));
-const router_1 = __importDefault(require("./routes/router"));
+const ticket_routes_1 = __importDefault(require("./routes/ticket.routes"));
+const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
 const express_1 = __importDefault(require("express"));
+const mongoose_1 = __importDefault(require("mongoose"));
 // si en router.ts lo explorto de la siguiente manera
 // const router = Router();
 // export default router;
@@ -33,8 +35,23 @@ server.app.use(body_parser_1.default.urlencoded({ extended: true }));
 server.app.use(body_parser_1.default.json());
 // CORS
 server.app.use(cors_1.default({ origin: true, credentials: true })); // permito que cualquier persona puede llamar mis servicios.
-server.app.use('/', router_1.default);
+// RUTAS
+server.app.use('/t', ticket_routes_1.default);
+server.app.use('/u', user_routes_1.default);
 server.start(() => {
     //console.log(`Servidor corriendo en el puerto ${ SERVER_PORT }`);
     console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }
+});
+// MONGO DB
+mongoose_1.default
+    .connect('mongodb://localhost:27017/webturnos', {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true
+})
+    .then(() => {
+    console.log('MongoDB corriendo en el puerto 27017: \x1b[32m%s\x1b[0m', 'ONLINE');
+})
+    .catch((err) => {
+    throw err;
 });

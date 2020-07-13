@@ -1,6 +1,7 @@
-import { Socket, } from 'socket.io';
+import { Socket } from 'socket.io';
 import socketIO from 'socket.io';
-import { ticket } from '../routes/router';
+
+import  ticketInstance from '../controllers/ticket.controller';
 
 // Borrar marcador
 export const escucharMensajes = (cliente: Socket, io: socketIO.Server) => {
@@ -24,7 +25,7 @@ export const escucharMensajes = (cliente: Socket, io: socketIO.Server) => {
 
 
 	function getMyDestination(cliente: any): string {
-		const myTicket = ticket.getTickets().filter(ticket =>
+		const myTicket = ticketInstance.ticket.getTickets().filter(ticket =>
 			(ticket.tm_end === null) && ( // sólo el último ticket en atención sin finalizar.
 				(ticket.id_socket_desk === cliente.id) ||
 				(ticket.id_socket === cliente.id))

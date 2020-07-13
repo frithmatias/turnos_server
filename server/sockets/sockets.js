@@ -1,6 +1,9 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const router_1 = require("../routes/router");
+const ticket_controller_1 = __importDefault(require("../controllers/ticket.controller"));
 // Borrar marcador
 exports.escucharMensajes = (cliente, io) => {
     // Orden enviada por el cliente.
@@ -17,7 +20,7 @@ exports.escucharMensajes = (cliente, io) => {
         io.to(myDestination).emit('mensaje-privado', payload);
     });
     function getMyDestination(cliente) {
-        const myTicket = router_1.ticket.getTickets().filter(ticket => (ticket.tm_end === null) && ( // sólo el último ticket en atención sin finalizar.
+        const myTicket = ticket_controller_1.default.ticket.getTickets().filter(ticket => (ticket.tm_end === null) && ( // sólo el último ticket en atención sin finalizar.
         (ticket.id_socket_desk === cliente.id) ||
             (ticket.id_socket === cliente.id)))[0];
         if (!myTicket || !myTicket.id_socket || !myTicket.id_socket_desk) {
