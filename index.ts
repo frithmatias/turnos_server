@@ -24,7 +24,7 @@ import mongoose from 'mongoose';
 // tengo que usar la importacion con llaves
 // import { router } from "./routes/router";
 import environment from './global/environment';
-
+console.log(environment);
 // Patron SINGLETON, es una configuración adicional a mi clase Server para asegurarme de tener
 // una UNICA instancia del servidor de socktes como de todas las propiedades de mi clase Server.
 // const server = new Server();

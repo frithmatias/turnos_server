@@ -2,7 +2,7 @@ import express from 'express';
 import socketIO from 'socket.io';
 import http from 'http'; // express levanta un servidor http, por eso es que son compatibles.
 import * as socket from '../sockets/sockets';
-import { environment } from '../global/environment.desar';
+import environment from '../global/environment';
 
 export default class Server {
 	
