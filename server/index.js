@@ -23,6 +23,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 // export const router = Router();
 // tengo que usar la importacion con llaves
 // import { router } from "./routes/router";
+const environment_1 = __importDefault(require("./global/environment"));
 // Patron SINGLETON, es una configuración adicional a mi clase Server para asegurarme de tener
 // una UNICA instancia del servidor de socktes como de todas las propiedades de mi clase Server.
 // const server = new Server();
@@ -44,7 +45,8 @@ server.start(() => {
 });
 // MONGO DB
 mongoose_1.default
-    .connect('mongodb://localhost:27017/webturnos', {
+    // .connect('mongodb://localhost:27017/webturnos', {
+    .connect(environment_1.default.DB_CONN_STR, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true
