@@ -6,7 +6,7 @@ let verificaToken = (req: any, res: Response, next: NextFunction) => {
     // Hay varias formas de recibir el token, puede ser por la URL como un argumento, en los HEADERS, que es lo tradicional
     // Vamos a recibirlo por una propiedad personalizada, o un header personalizado llamado x-token en los HEADERS.
 
-    const userToken = req.get('x-token' || '');
+    const userToken = req.get('turnos-token' || '');
     Token.checkToken(userToken)
         .then((decoded: any) => {
             console.log('Decoded:', decoded);

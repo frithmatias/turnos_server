@@ -48,7 +48,7 @@ export const escucharMensajes = (cliente: Socket, io: socketIO.Server) => {
 	}
 
 	function errorResponse(cliente: any): void {
-		const payload = {mensaje: '<system> No se pudo enviar el mensaje'}
+		const payload = {mensaje: 'Mensaje automático: Debido a que usted aún no tiene asignado un asistente, esta consulta fue derivada a ventanilla de informes. Por favor espere, le responderemos a la brevedad. Gracias.'}
 		io.to(cliente.id).emit('mensaje-privado', payload);
 	}
 

@@ -6,7 +6,7 @@ const token_1 = __importDefault(require("../classes/token"));
 let verificaToken = (req, res, next) => {
     // Hay varias formas de recibir el token, puede ser por la URL como un argumento, en los HEADERS, que es lo tradicional
     // Vamos a recibirlo por una propiedad personalizada, o un header personalizado llamado x-token en los HEADERS.
-    const userToken = req.get('x-token' || '');
+    const userToken = req.get('turnos-token' || '');
     token_1.default.checkToken(userToken)
         .then((decoded) => {
         console.log('Decoded:', decoded);

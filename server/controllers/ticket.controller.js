@@ -17,6 +17,8 @@ function createTicket(req, res) {
     const numTickets = ticket.getPendingTickets();
     //todo: crear dos salas. Una para escritorios y otra para clientes. Este mensaje es dirigido a escritorios.
     server.io.emit('nuevo-turno', numTickets);
+    console.log('enviando mensaje de bienvenida a', id_socket);
+    server.io.to(id_socket).emit('mensaje-privado', { mensaje: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
 }
 ;
 function takeTicket(req, res) {
