@@ -1,16 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-class Ticket {
-    constructor(id_ticket, id_desk, status, start, end) {
-        this.id_ticket = id_ticket;
-        this.id_desk = id_desk;
-        this.status = status;
-        this.start = start;
-        this.end = end;
-        this.id_desk = null;
-        this.status = 'ES';
-        this.start = new Date().getTime();
-        this.end = null;
-    }
-}
-exports.Ticket = Ticket;
+const mongoose_1 = require("mongoose");
+const ticketsSchema = new mongoose_1.Schema({
+    id_ticket: { type: Number, required: [true, 'El id del ticket es necesario'] },
+    id_socket: { type: String, required: [true, 'El socket del cliente en el ticket es necesario'] },
+    id_socket_desk: { type: String, required: false },
+    id_desk: { type: Number, required: false },
+    id_company: { type: String, required: [true, 'El id de la empresa es necesario'] },
+    id_type: { type: String, required: [true, 'El tipo de ticket es necesario'] },
+    tm_start: { type: Number, required: true, default: +new Date().getTime() },
+    tm_att: { type: Number, required: false },
+    tm_end: { type: Number, required: false },
+}, { collection: "tickets" });
+exports.Ticket = mongoose_1.model('Ticket', ticketsSchema);

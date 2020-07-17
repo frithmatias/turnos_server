@@ -11,7 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-const usuario_model_1 = require("../models/usuario.model");
+const user_model_1 = require("../models/user.model");
 const token_1 = __importDefault(require("../classes/token"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const environment_1 = __importDefault(require("../global/environment"));
@@ -22,7 +22,7 @@ const oauthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 function registerUser(req, res) {
     var body = req.body;
     console.log('REGISTRO DE USUARIO', req.body);
-    var usuario = new usuario_model_1.Usuario({
+    var usuario = new user_model_1.User({
         email: body.email,
         nombre: body.nombre,
         empresa: body.empresa,
@@ -38,7 +38,7 @@ function registerUser(req, res) {
         if (err) {
             return res.status(400).json({
                 ok: false,
-                mensaje: "El email que ingresa ya se encuentra registrado.",
+                mensaje: "Error al guardar el usuario.",
                 errors: err
             });
         }
@@ -55,7 +55,7 @@ function registerUser(req, res) {
     });
 }
 function readUser(req, res) {
-    usuario_model_1.Usuario.findById(req.params.id, (err, usuario) => {
+    user_model_1.User.findById(req.params.id, (err, usuario) => {
         if (err) {
             return res.status(500).json({
                 ok: false,
@@ -80,7 +80,7 @@ function updateUser(req, res) {
     var body = req.body;
     var id = req.params.id;
     // Verifico que el id existe
-    usuario_model_1.Usuario.findById(id, (err, usuario) => {
+    user_model_1.User.findById(id, (err, usuario) => {
         if (err) {
             return res.status(500).json({
                 ok: false,
@@ -116,7 +116,7 @@ function updateUser(req, res) {
 }
 function deleteUser(req, res) {
     var id = req.params.id;
-    usuario_model_1.Usuario.findByIdAndRemove(id, (err, usuarioBorrado) => {
+    user_model_1.User.findByIdAndRemove(id, (err, usuarioBorrado) => {
         if (err) {
             return res.status(500).json({
                 ok: false,
@@ -179,7 +179,7 @@ function loginGoogle(req, res) {
                 message: "No se pudo obtener el usuario de Google."
             });
         }
-        usuario_model_1.Usuario.findOne({ email: googleUser.email }, (err, usuarioDB) => {
+        user_model_1.User.findOne({ email: googleUser.email }, (err, usuarioDB) => {
             if (err) {
                 res.status(500).json({
                     ok: false,
@@ -221,7 +221,7 @@ function loginGoogle(req, res) {
             }
             else {
                 // el usuario no existe, hay que crearlo.
-                var usuario = new usuario_model_1.Usuario();
+                var usuario = new user_model_1.User();
                 usuario.email = googleUser.email;
                 usuario.nombre = googleUser.nombre;
                 usuario.password = ":)";
@@ -248,7 +248,7 @@ function loginGoogle(req, res) {
 function loginUser(req, res) {
     console.log('PORT_', environment_1.default.SERVER_PORT);
     var body = req.body;
-    usuario_model_1.Usuario.findOne({ email: body.email }, (err, usuarioDB) => {
+    user_model_1.User.findOne({ email: body.email }, (err, usuarioDB) => {
         if (err) {
             return res.status(500).json({
                 ok: false,
@@ -294,30 +294,42 @@ function loginUser(req, res) {
         });
     });
 }
-function obtenerMenu(ROLE) {
-    var menu = [
-        {
-            titulo: "Usuario",
-            icono: "mdi mdi-account-circle",
-            submenu: [
-                { titulo: "Mi Perfil", url: "/profile", icono: "mdi mdi-face" },
-                { titulo: "Tema", url: "/account-settings", icono: "mdi mdi-format-color-fill" },
-                { titulo: "Nuevo Aviso", url: "/aviso-crear/nuevo", icono: "mdi mdi-plus-circle-outline" },
-                { titulo: "Mis Favoritos", url: "/favoritos", icono: "mdi mdi-heart" },
-                { titulo: "Mis Avisos", url: "/misavisos", icono: "mdi mdi-city" },
-                { titulo: "Mis Busquedas", url: "/busquedas", icono: "mdi mdi-search-web" },
-            ]
-        }
-    ];
-    if (ROLE === "ADMIN_ROLE") {
+function obtenerMenu(role) {
+    var menu = [];
+    if ((role === "ASSISTANT_ROLE") || (role === "CLIENT_ROLE")) {
         menu.push({
-            titulo: "Administracion",
+            titulo: "Asistente",
             icono: "mdi mdi-settings",
             submenu: [
-                { titulo: "Usuarios", url: "/usuarios", icono: "mdi mdi-account-multiple-plus" },
-                { titulo: "Inmobiliarias", url: "/inmobiliarias", icono: "mdi mdi-city" },
-                { titulo: "Formularios", url: "/forms", icono: "mdi mdi-table-large" },
-                { titulo: "Controles", url: "/controles", icono: "mdi mdi-console" }
+                { titulo: "Home", url: "/asistente/home", icono: "mdi mdi-search-web" },
+                { titulo: "Dashboard", url: "/asistente/dashboard", icono: "mdi mdi-face" },
+                { titulo: "Escritorio", url: "/asistente/escritorio", icono: "mdi mdi-format-color-fill" },
+            ]
+        }); // unshift lo coloca al princio del array, push lo coloca al final.
+    }
+    if (role === "USER_ROLE") {
+        menu.push({
+            titulo: "Usuario",
+            icono: "mdi mdi-settings",
+            submenu: [
+                { titulo: "Home", url: "/user/home", icono: "mdi mdi-search-web" },
+                { titulo: "Mi Perfil", url: "/user/profile", icono: "mdi mdi-face" },
+                { titulo: "Asistentes", url: "/user/assistants", icono: "mdi mdi-format-color-fill" },
+                { titulo: "Ventanillas", url: "/user/desktops", icono: "mdi mdi-plus-circle-outline" },
+                { titulo: "Turnos", url: "/user/tickets", icono: "mdi mdi-heart" },
+                { titulo: "Dashboard", url: "/user/dashboard", icono: "mdi mdi-city" },
+            ]
+        }); // unshift lo coloca al princio del array, push lo coloca al final.
+    }
+    if (role === "ADMIN_ROLE") {
+        menu.push({
+            titulo: "Administrador",
+            icono: "mdi mdi-settings",
+            submenu: [
+                { titulo: "Usuarios", url: "/admin/users", icono: "mdi mdi-account-multiple-plus" },
+                { titulo: "Empresas", url: "/admin/company", icono: "mdi mdi-city" },
+                { titulo: "Turnos", url: "/admin/tickets", icono: "mdi mdi-table-large" },
+                { titulo: "Metricas", url: "/admin/metrics", icono: "mdi mdi-console" }
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }

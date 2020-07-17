@@ -3,11 +3,11 @@ import uniqueValidator from 'mongoose-unique-validator';
 import bcrypt from 'bcrypt';
 
 var rolesValidos = {
-    values: ["ADMIN_ROLE", "USER_ROLE"],
+    values: ["ADMIN_ROLE", "USER_ROLE", "ASSISTANT_ROLE"],
     message: "{VALUE} no es un rol permitido"
   };
   
-const usuarioSchema = new Schema({
+const userSchema = new Schema({
     nombre: {type: String, required: [true, 'El nombre es necesario']},
     email: {type: String, unique: true, required: [true, 'El email es necesario']},
     password: {type: String, required: [true, 'El password es necesario']},
@@ -17,11 +17,11 @@ const usuarioSchema = new Schema({
     google: {type: Boolean, required: true, default: false},
     lastlogin: { type: Date, required: false },
     createdat: { type: Date, required: false }
-})
+},{ collection: "users" })
 
-usuarioSchema.method('checkPassword', function(this: any, pass: String = ''): boolean {
+userSchema.method('checkPassword', function(this: any, pass: String = ''): boolean {
     // Aca es muy importante NO USAR función de flecha sino una función tradicional
-    // para no perder la referencia al THIS que apunta al objeto const usuarioSchema = new Schema({})
+    // para no perder la referencia al THIS que apunta al objeto const userSchema = new Schema({})
     if (bcrypt.compareSync(pass, this.password)) {
         return true;
     } else {
@@ -29,7 +29,7 @@ usuarioSchema.method('checkPassword', function(this: any, pass: String = ''): bo
     }
 });
 
-interface Usuario extends Document {
+interface User extends Document {
     nombre: string;
     email: string;
     password: string;
@@ -41,5 +41,5 @@ interface Usuario extends Document {
     createdat: Date;
 }
 
-usuarioSchema.plugin( uniqueValidator, {message: 'El campo {PATH} debe de ser unico'} );
-export const Usuario = model<Usuario>('Usuario', usuarioSchema);
+userSchema.plugin( uniqueValidator, {message: 'El campo {PATH} debe de ser unico'} );
+export const User = model<User>('User', userSchema);
