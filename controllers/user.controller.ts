@@ -3,6 +3,7 @@ import { User } from '../models/user.model';
 import Token from '../classes/token';
 import bcrypt from 'bcrypt';
 import environment from '../global/environment';
+import { Desktop } from '../models/desktop.model';
 
 // Google Login
 var GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
@@ -10,47 +11,45 @@ const { OAuth2Client } = require("google-auth-library");
 const oauthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 
+// ========================================================
+// User Methods
+// ========================================================
+
+
 function registerUser(req: any, res: Response) {
 
   var body = req.body;
-  console.log('REGISTRO DE USUARIO', req.body);
-  var usuario = new User({
-    email: body.email,
-    nombre: body.nombre,
-    empresa: body.empresa,
-    password: bcrypt.hashSync(body.password, 10),
-    img: body.img,
-    role: body.role,
-    createdat: new Date()
+  console.log('body', body);
+  var user = new User({
+    tx_name: body.tx_name,
+    tx_email: body.tx_email,
+    id_company: body.id_company,
+    tx_password: bcrypt.hashSync(body.tx_password, 10),
+    bl_google: false,
+    fc_createdat: new Date()
   });
+  console.log('user', user);
 
   //===================================
   // SAVE USER
   //===================================
 
-  usuario.save((err, usuarioGuardado) => {
-    if (err) {
-      return res.status(400).json({
-        ok: false,
-        mensaje: "Error al guardar el usuario.",
-        errors: err
-      });
-    }
-
-    //===================================
-    // SEND MAIL VALIDATOR
-    //===================================
-    // sendActivationMail(usuarioGuardado.email, usuarioGuardado.nombre, usuarioGuardado._id);
-
+  user.save().then((userSaved) => {
     res.status(201).json({
       ok: true,
       mensaje: "Usuario guardado correctamente.",
-      usuario: usuarioGuardado, // USUARIO A GUARDAR
+      usuario: userSaved, // USUARIO A GUARDAR
       usuariotoken: req.usuario // USUARIO QUE HIZO LA SOLICITUD
     });
-
+  }).catch((err) => {
+    return res.status(400).json({
+      ok: false,
+      mensaje: "Error al guardar el usuario.",
+      errors: err
+    });
   });
 }
+
 
 function readUser(req: Request, res: Response) {
 
@@ -101,9 +100,9 @@ function updateUser(req: Request, res: Response) {
       });
     }
 
-    usuario.nombre = body.nombre;
-    usuario.email = body.email;
-    usuario.role = body.role;
+    usuario.tx_name = body.tx_name;
+    usuario.tx_email = body.tx_email;
+    usuario.id_role = body.id_role;
 
     usuario.save((err, usuarioGuardado) => {
       if (err) {
@@ -114,7 +113,7 @@ function updateUser(req: Request, res: Response) {
         });
       }
 
-      usuarioGuardado.password = ":)";
+      usuarioGuardado.tx_password = ":)";
 
       res.status(200).json({
         ok: true,
@@ -152,6 +151,141 @@ function deleteUser(req: Request, res: Response) {
   });
 }
 
+
+// ========================================================
+// Assistant Methods
+// ========================================================
+
+function createAssistant(req: Request, res: Response) {
+
+  var body = req.body;
+
+  var assistant = new User({
+    tx_email: body.tx_email,
+    tx_name: body.tx_name,
+    id_company: body.id_company,
+    tx_password: bcrypt.hashSync(body.tx_password, 10),
+    tx_img: body.tx_img,
+    id_role: 'ASSISTANT_ROLE',
+    fc_createdat: new Date()
+  });
+
+  assistant.save().then((assistantSaved) => {
+    res.status(200).json({
+      ok: true,
+      msg: 'Asistente guardado correctamente',
+      assistant: assistantSaved
+    })
+  }).catch((err) => {
+    res.status(400).json({
+      ok: false,
+      msg: err,
+      assistant: null
+    })
+  })
+}
+
+function readAssistants(req: Request, res: Response) {
+  let idCompany = req.params.idCompany;
+  User.find({ id_company: idCompany }).then((assistants) => {
+    res.status(200).json({
+      ok: true,
+      msg: 'Asistentes obtenidos correctamente',
+      assistants
+    })
+  }).catch(() => {
+    res.status(400).json({
+      ok: false,
+      msg: 'Error al consultar los asistentes',
+      assistants: null
+    })
+  })
+}
+
+function deleteAssistant(req: Request, res: Response) {
+  let idAssistant = req.params.idAssistant;
+  User.findByIdAndDelete(idAssistant).then((assistantDeleted) => {
+    res.status(200).json({
+      ok: true,
+      msg: 'Asistente eliminado correctamente',
+      assistant: assistantDeleted
+    })
+  }).catch(() => {
+    res.status(400).json({
+      ok: false,
+      msg: 'Error al eliminar al asistente',
+      assistant: null
+    })
+  })
+}
+
+
+// ========================================================
+// Desktop Methods
+// ========================================================
+
+function createDesktop(req: Request, res: Response) {
+
+  var body = req.body;
+  var desktop = new Desktop({
+    id_company: body.id_company,
+    id_desktop: body.id_desktop,
+    id_type: body.id_type
+  });
+
+  desktop.save().then((desktopSaved) => {
+    res.status(200).json({
+      ok: true,
+      msg: 'Escritorio guardado correctamente',
+      desktop: desktopSaved
+    })
+  }).catch((err) => {
+    res.status(400).json({
+      ok: false,
+      msg: err.message,
+      desktop: null
+    })
+  })
+}
+
+function readDesktops(req: Request, res: Response) {
+  let idCompany = req.params.idCompany;
+  Desktop.find({ id_company: idCompany }).then((desktops) => {
+    res.status(200).json({
+      ok: true,
+      msg: 'Escritorios obtenidos correctamente',
+      desktops
+    })
+  }).catch(() => {
+    res.status(400).json({
+      ok: false,
+      msg: 'Error al consultar los escritorios',
+      desktops: null
+    })
+  })
+}
+
+function deleteDesktop(req: Request, res: Response) {
+  let idDesktop = req.params.idDesktop;
+  Desktop.findByIdAndDelete(idDesktop).then((desktopDeleted) => {
+    res.status(200).json({
+      ok: true,
+      msg: 'Escritorio eliminado correctamente',
+      desktop: desktopDeleted
+    })
+  }).catch(() => {
+    res.status(400).json({
+      ok: false,
+      msg: 'Error al eliminar el escritorio',
+      desktop: null
+    })
+  })
+}
+
+// ========================================================
+// Session methods
+// ========================================================
+
 function updateToken(req: any, res: Response) {
   var token = Token.getJwtToken({ usuario: req.usuario })
   res.status(200).json({
@@ -168,7 +302,7 @@ async function verify(token: string) {
   });
   const payload = ticket.getPayload();
   return {
-    nombre: payload.name,
+    name: payload.name,
     email: payload.email,
     img: payload.picture,
     google: true,
@@ -205,7 +339,7 @@ async function loginGoogle(req: Request, res: Response) {
     }
 
     if (usuarioDB) {
-      if (usuarioDB.google === false) {
+      if (usuarioDB.bl_google === false) {
         return res.status(400).json({
           ok: false,
           mensaje: "Para el email ingresado debe usar autenticación con clave.",
@@ -215,7 +349,7 @@ async function loginGoogle(req: Request, res: Response) {
         // Google SignIn -> new token
         var token = Token.getJwtToken({ usuario: usuarioDB })
 
-        usuarioDB.lastlogin = new Date();
+        usuarioDB.fc_lastlogin = new Date();
         usuarioDB.save((err, userLastLogin) => {
 
           if (err) {
@@ -226,7 +360,7 @@ async function loginGoogle(req: Request, res: Response) {
             });
           }
 
-          usuarioDB.password = ":)";
+          usuarioDB.tx_password = ":)";
 
           res.status(200).json({
             ok: true,
@@ -234,7 +368,7 @@ async function loginGoogle(req: Request, res: Response) {
             token: token,
             id: usuarioDB.id,
             usuario: usuarioDB,
-            menu: obtenerMenu(usuarioDB.role)
+            menu: obtenerMenu(usuarioDB.id_role)
           });
         });
 
@@ -244,25 +378,30 @@ async function loginGoogle(req: Request, res: Response) {
       // el usuario no existe, hay que crearlo.
       var usuario = new User();
 
-      usuario.email = googleUser.email;
-      usuario.nombre = googleUser.nombre;
-      usuario.password = ":)";
-      usuario.img = googleUser.img;
-      usuario.google = true;
-      usuario.lastlogin = new Date();
-      usuario.createdat = new Date();
+      usuario.tx_email = googleUser.tx_email;
+      usuario.tx_name = googleUser.tx_name;
+      usuario.tx_password = ":)";
+      usuario.id_company = googleUser.tx_email;
+      usuario.tx_img = googleUser.tx_img;
+      usuario.bl_google = true;
+      usuario.fc_lastlogin = new Date();
+      usuario.fc_createdat = new Date();
+      usuario.id_role = 'USER_ROLE';
+
 
       usuario.save((err, usuarioDB) => {
         if (err) {
+          console.log(err);
         }
         var token = Token.getJwtToken({ usuario: usuarioDB })
 
+        console.log(usuarioDB);
         res.status(200).json({
           ok: true,
           token: token,
           mensaje: { message: "OK LOGUEADO " },
           usuario,
-          menu: obtenerMenu(usuarioDB.role)
+          // menu: obtenerMenu(usuarioDB.id_role)
         });
       });
     }
@@ -270,48 +409,32 @@ async function loginGoogle(req: Request, res: Response) {
 }
 
 function loginUser(req: Request, res: Response) {
-  console.log('PORT_', environment.SERVER_PORT)
+
   var body = req.body;
-  User.findOne({ email: body.email }, (err, usuarioDB) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        mensaje: "Error al buscar un usuario",
-        errors: err
-      });
-    }
+  console.log(body);
+  User.findOne({ tx_email: body.tx_email }).then( usuarioDB => {
 
     if (!usuarioDB) {
       return res.status(400).json({
         ok: false,
-        mensaje: "Credenciales incorrectas",
-        errors: err
+        mensaje: "Credenciales incorrectas1"
       });
     }
 
-    if (!bcrypt.compareSync(body.password, usuarioDB.password)) {
+    if (!bcrypt.compareSync(body.tx_password, usuarioDB.tx_password)) {
       return res.status(400).json({
         ok: false,
-        mensaje: "Credenciales incorrectas",
-        errors: err
+        mensaje: "Credenciales incorrectas2"
       });
     }
 
     // Si llego hasta acá, el usuario y la contraseña son correctas, creo el token
-    var token = Token.getJwtToken({ usuario: usuarioDB })
+    var token = Token.getJwtToken({ usuario: usuarioDB });
+    usuarioDB.fc_lastlogin = new Date();
 
-    usuarioDB.lastlogin = new Date();
-    usuarioDB.save((err: any, usuarioUpdateLoginDate: any) => {
+    usuarioDB.save().then(() => {
 
-      if (err) {
-        return res.status(500).json({
-          ok: false,
-          mensaje: "Error al actualizar la fecha de login",
-          errors: err
-        });
-      }
-
-      usuarioDB.password = ":)";
+      usuarioDB.tx_password = ":)";
       res.status(200).json({
         ok: true,
         mensaje: "Login post recibido.",
@@ -319,17 +442,34 @@ function loginUser(req: Request, res: Response) {
         body: body,
         id: usuarioDB._id,
         usuario: usuarioDB,
-        menu: obtenerMenu(usuarioDB.role)
+        menu: obtenerMenu(usuarioDB.id_role)
       });
-    });
+
+    }).catch((err) => {
+      return res.status(500).json({
+        ok: false,
+        mensaje: "Error al actualizar la fecha de login",
+        errors: err
+      });
+    })
+
+  }).catch ((err) => {
+  return res.status(500).json({
+    ok: false,
+    mensaje: "Error al buscar un usuario",
+    errors: err
   });
+
+})
+
+
 }
 
-function obtenerMenu(role: string) {
+function obtenerMenu(id_role: string) {
   var menu = [];
 
 
-  if ((role === "ASSISTANT_ROLE") || (role === "CLIENT_ROLE")) {
+  if ((id_role === "ASSISTANT_ROLE") || (id_role === "CLIENT_ROLE")) {
     menu.push({
       titulo: "Asistente",
       icono: "mdi mdi-settings",
@@ -342,7 +482,7 @@ function obtenerMenu(role: string) {
   }
 
 
-  if (role === "USER_ROLE") {
+  if (id_role === "USER_ROLE") {
     menu.push({
       titulo: "Usuario",
       icono: "mdi mdi-settings",
@@ -357,7 +497,7 @@ function obtenerMenu(role: string) {
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
 
-  if (role === "ADMIN_ROLE") {
+  if (id_role === "ADMIN_ROLE") {
     menu.push({
       titulo: "Administrador",
       icono: "mdi mdi-settings",
@@ -375,12 +515,20 @@ function obtenerMenu(role: string) {
   return menu;
 }
 
-
 export = {
   registerUser,
   readUser,
   updateUser,
   deleteUser,
+
+  createAssistant,
+  readAssistants,
+  deleteAssistant,
+
+  createDesktop,
+  readDesktops,
+  deleteDesktop,
+
   updateToken,
   loginGoogle,
   loginUser,

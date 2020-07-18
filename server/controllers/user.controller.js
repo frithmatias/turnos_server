@@ -15,42 +15,41 @@ const user_model_1 = require("../models/user.model");
 const token_1 = __importDefault(require("../classes/token"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const environment_1 = __importDefault(require("../global/environment"));
+const desktop_model_1 = require("../models/desktop.model");
 // Google Login
 var GOOGLE_CLIENT_ID = environment_1.default.GOOGLE_CLIENT_ID;
 const { OAuth2Client } = require("google-auth-library");
 const oauthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
+// ========================================================
+// User Methods
+// ========================================================
 function registerUser(req, res) {
     var body = req.body;
-    console.log('REGISTRO DE USUARIO', req.body);
-    var usuario = new user_model_1.User({
-        email: body.email,
-        nombre: body.nombre,
-        empresa: body.empresa,
-        password: bcrypt_1.default.hashSync(body.password, 10),
-        img: body.img,
-        role: body.role,
-        createdat: new Date()
+    console.log('body', body);
+    var user = new user_model_1.User({
+        tx_name: body.tx_name,
+        tx_email: body.tx_email,
+        id_company: body.id_company,
+        tx_password: bcrypt_1.default.hashSync(body.tx_password, 10),
+        bl_google: false,
+        fc_createdat: new Date()
     });
+    console.log('user', user);
     //===================================
     // SAVE USER
     //===================================
-    usuario.save((err, usuarioGuardado) => {
-        if (err) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: "Error al guardar el usuario.",
-                errors: err
-            });
-        }
-        //===================================
-        // SEND MAIL VALIDATOR
-        //===================================
-        // sendActivationMail(usuarioGuardado.email, usuarioGuardado.nombre, usuarioGuardado._id);
+    user.save().then((userSaved) => {
         res.status(201).json({
             ok: true,
             mensaje: "Usuario guardado correctamente.",
-            usuario: usuarioGuardado,
+            usuario: userSaved,
             usuariotoken: req.usuario // USUARIO QUE HIZO LA SOLICITUD
+        });
+    }).catch((err) => {
+        return res.status(400).json({
+            ok: false,
+            mensaje: "Error al guardar el usuario.",
+            errors: err
         });
     });
 }
@@ -95,9 +94,9 @@ function updateUser(req, res) {
                 errors: { message: "No existe usuario con el id solicitado" }
             });
         }
-        usuario.nombre = body.nombre;
-        usuario.email = body.email;
-        usuario.role = body.role;
+        usuario.tx_name = body.tx_name;
+        usuario.tx_email = body.tx_email;
+        usuario.id_role = body.id_role;
         usuario.save((err, usuarioGuardado) => {
             if (err) {
                 return res.status(400).json({
@@ -106,7 +105,7 @@ function updateUser(req, res) {
                     errors: err
                 });
             }
-            usuarioGuardado.password = ":)";
+            usuarioGuardado.tx_password = ":)";
             res.status(200).json({
                 ok: true,
                 usuario: usuarioGuardado
@@ -138,6 +137,125 @@ function deleteUser(req, res) {
         });
     });
 }
+// ========================================================
+// Assistant Methods
+// ========================================================
+function createAssistant(req, res) {
+    var body = req.body;
+    var assistant = new user_model_1.User({
+        tx_email: body.tx_email,
+        tx_name: body.tx_name,
+        id_company: body.id_company,
+        tx_password: bcrypt_1.default.hashSync(body.tx_password, 10),
+        tx_img: body.tx_img,
+        id_role: 'ASSISTANT_ROLE',
+        fc_createdat: new Date()
+    });
+    assistant.save().then((assistantSaved) => {
+        res.status(200).json({
+            ok: true,
+            msg: 'Asistente guardado correctamente',
+            assistant: assistantSaved
+        });
+    }).catch((err) => {
+        res.status(400).json({
+            ok: false,
+            msg: err,
+            assistant: null
+        });
+    });
+}
+function readAssistants(req, res) {
+    let idCompany = req.params.idCompany;
+    user_model_1.User.find({ id_company: idCompany }).then((assistants) => {
+        res.status(200).json({
+            ok: true,
+            msg: 'Asistentes obtenidos correctamente',
+            assistants
+        });
+    }).catch(() => {
+        res.status(400).json({
+            ok: false,
+            msg: 'Error al consultar los asistentes',
+            assistants: null
+        });
+    });
+}
+function deleteAssistant(req, res) {
+    let idAssistant = req.params.idAssistant;
+    user_model_1.User.findByIdAndDelete(idAssistant).then((assistantDeleted) => {
+        res.status(200).json({
+            ok: true,
+            msg: 'Asistente eliminado correctamente',
+            assistant: assistantDeleted
+        });
+    }).catch(() => {
+        res.status(400).json({
+            ok: false,
+            msg: 'Error al eliminar al asistente',
+            assistant: null
+        });
+    });
+}
+// ========================================================
+// Desktop Methods
+// ========================================================
+function createDesktop(req, res) {
+    var body = req.body;
+    var desktop = new desktop_model_1.Desktop({
+        id_company: body.id_company,
+        id_desktop: body.id_desktop,
+        id_type: body.id_type
+    });
+    desktop.save().then((desktopSaved) => {
+        res.status(200).json({
+            ok: true,
+            msg: 'Escritorio guardado correctamente',
+            desktop: desktopSaved
+        });
+    }).catch((err) => {
+        res.status(400).json({
+            ok: false,
+            msg: err.message,
+            desktop: null
+        });
+    });
+}
+function readDesktops(req, res) {
+    let idCompany = req.params.idCompany;
+    desktop_model_1.Desktop.find({ id_company: idCompany }).then((desktops) => {
+        res.status(200).json({
+            ok: true,
+            msg: 'Escritorios obtenidos correctamente',
+            desktops
+        });
+    }).catch(() => {
+        res.status(400).json({
+            ok: false,
+            msg: 'Error al consultar los escritorios',
+            desktops: null
+        });
+    });
+}
+function deleteDesktop(req, res) {
+    let idDesktop = req.params.idDesktop;
+    desktop_model_1.Desktop.findByIdAndDelete(idDesktop).then((desktopDeleted) => {
+        res.status(200).json({
+            ok: true,
+            msg: 'Escritorio eliminado correctamente',
+            desktop: desktopDeleted
+        });
+    }).catch(() => {
+        res.status(400).json({
+            ok: false,
+            msg: 'Error al eliminar el escritorio',
+            desktop: null
+        });
+    });
+}
+// ========================================================
+// Session methods
+// ========================================================
 function updateToken(req, res) {
     var token = token_1.default.getJwtToken({ usuario: req.usuario });
     res.status(200).json({
@@ -154,7 +272,7 @@ function verify(token) {
         });
         const payload = ticket.getPayload();
         return {
-            nombre: payload.name,
+            name: payload.name,
             email: payload.email,
             img: payload.picture,
             google: true,
@@ -188,7 +306,7 @@ function loginGoogle(req, res) {
                 });
             }
             if (usuarioDB) {
-                if (usuarioDB.google === false) {
+                if (usuarioDB.bl_google === false) {
                     return res.status(400).json({
                         ok: false,
                         mensaje: "Para el email ingresado debe usar autenticación con clave.",
@@ -198,7 +316,7 @@ function loginGoogle(req, res) {
                 else {
                     // Google SignIn -> new token
                     var token = token_1.default.getJwtToken({ usuario: usuarioDB });
-                    usuarioDB.lastlogin = new Date();
+                    usuarioDB.fc_lastlogin = new Date();
                     usuarioDB.save((err, userLastLogin) => {
                         if (err) {
                             res.status(500).json({
@@ -207,14 +325,14 @@ function loginGoogle(req, res) {
                                 error: err
                             });
                         }
-                        usuarioDB.password = ":)";
+                        usuarioDB.tx_password = ":)";
                         res.status(200).json({
                             ok: true,
                             mensaje: "Login exitoso.",
                             token: token,
                             id: usuarioDB.id,
                             usuario: usuarioDB,
-                            menu: obtenerMenu(usuarioDB.role)
+                            menu: obtenerMenu(usuarioDB.id_role)
                         });
                     });
                 }
@@ -222,23 +340,26 @@ function loginGoogle(req, res) {
             else {
                 // el usuario no existe, hay que crearlo.
                 var usuario = new user_model_1.User();
-                usuario.email = googleUser.email;
-                usuario.nombre = googleUser.nombre;
-                usuario.password = ":)";
-                usuario.img = googleUser.img;
-                usuario.google = true;
-                usuario.lastlogin = new Date();
-                usuario.createdat = new Date();
+                usuario.tx_email = googleUser.tx_email;
+                usuario.tx_name = googleUser.tx_name;
+                usuario.tx_password = ":)";
+                usuario.id_company = googleUser.tx_email;
+                usuario.tx_img = googleUser.tx_img;
+                usuario.bl_google = true;
+                usuario.fc_lastlogin = new Date();
+                usuario.fc_createdat = new Date();
+                usuario.id_role = 'USER_ROLE';
                 usuario.save((err, usuarioDB) => {
                     if (err) {
+                        console.log(err);
                     }
                     var token = token_1.default.getJwtToken({ usuario: usuarioDB });
+                    console.log(usuarioDB);
                     res.status(200).json({
                         ok: true,
                         token: token,
                         mensaje: { message: "OK LOGUEADO " },
                         usuario,
-                        menu: obtenerMenu(usuarioDB.role)
                     });
                 });
             }
@@ -246,42 +367,26 @@ function loginGoogle(req, res) {
     });
 }
 function loginUser(req, res) {
-    console.log('PORT_', environment_1.default.SERVER_PORT);
     var body = req.body;
-    user_model_1.User.findOne({ email: body.email }, (err, usuarioDB) => {
-        if (err) {
-            return res.status(500).json({
-                ok: false,
-                mensaje: "Error al buscar un usuario",
-                errors: err
-            });
-        }
+    console.log(body);
+    user_model_1.User.findOne({ tx_email: body.tx_email }).then(usuarioDB => {
         if (!usuarioDB) {
             return res.status(400).json({
                 ok: false,
-                mensaje: "Credenciales incorrectas",
-                errors: err
+                mensaje: "Credenciales incorrectas1"
             });
         }
-        if (!bcrypt_1.default.compareSync(body.password, usuarioDB.password)) {
+        if (!bcrypt_1.default.compareSync(body.tx_password, usuarioDB.tx_password)) {
             return res.status(400).json({
                 ok: false,
-                mensaje: "Credenciales incorrectas",
-                errors: err
+                mensaje: "Credenciales incorrectas2"
             });
         }
         // Si llego hasta acá, el usuario y la contraseña son correctas, creo el token
         var token = token_1.default.getJwtToken({ usuario: usuarioDB });
-        usuarioDB.lastlogin = new Date();
-        usuarioDB.save((err, usuarioUpdateLoginDate) => {
-            if (err) {
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: "Error al actualizar la fecha de login",
-                    errors: err
-                });
-            }
-            usuarioDB.password = ":)";
+        usuarioDB.fc_lastlogin = new Date();
+        usuarioDB.save().then(() => {
+            usuarioDB.tx_password = ":)";
             res.status(200).json({
                 ok: true,
                 mensaje: "Login post recibido.",
@@ -289,14 +394,26 @@ function loginUser(req, res) {
                 body: body,
                 id: usuarioDB._id,
                 usuario: usuarioDB,
-                menu: obtenerMenu(usuarioDB.role)
+                menu: obtenerMenu(usuarioDB.id_role)
             });
+        }).catch((err) => {
+            return res.status(500).json({
+                ok: false,
+                mensaje: "Error al actualizar la fecha de login",
+                errors: err
+            });
+        });
+    }).catch((err) => {
+        return res.status(500).json({
+            ok: false,
+            mensaje: "Error al buscar un usuario",
+            errors: err
         });
     });
 }
-function obtenerMenu(role) {
+function obtenerMenu(id_role) {
     var menu = [];
-    if ((role === "ASSISTANT_ROLE") || (role === "CLIENT_ROLE")) {
+    if ((id_role === "ASSISTANT_ROLE") || (id_role === "CLIENT_ROLE")) {
         menu.push({
             titulo: "Asistente",
             icono: "mdi mdi-settings",
@@ -307,7 +424,7 @@ function obtenerMenu(role) {
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }
-    if (role === "USER_ROLE") {
+    if (id_role === "USER_ROLE") {
         menu.push({
             titulo: "Usuario",
             icono: "mdi mdi-settings",
@@ -321,7 +438,7 @@ function obtenerMenu(role) {
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }
-    if (role === "ADMIN_ROLE") {
+    if (id_role === "ADMIN_ROLE") {
         menu.push({
             titulo: "Administrador",
             icono: "mdi mdi-settings",
@@ -340,6 +457,12 @@ module.exports = {
     readUser,
     updateUser,
     deleteUser,
+    createAssistant,
+    readAssistants,
+    deleteAssistant,
+    createDesktop,
+    readDesktops,
+    deleteDesktop,
     updateToken,
     loginGoogle,
     loginUser,

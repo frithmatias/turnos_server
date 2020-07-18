@@ -3,7 +3,8 @@ import { User } from '../models/user.model';
 
 function getClientData(req: Request, res: Response) {
   var company = String(req.params.company);
-  User.findOne({empresa:company}, 'email empresa', (err, user) => {
+  
+  User.findOne({id_company: company}, 'id_company tx_email', (err, user) => {
       if (err) {
         return res.status(500).json({
           ok: false,
@@ -19,7 +20,7 @@ function getClientData(req: Request, res: Response) {
         });
       }
       
-      user.password = ':)';
+      user.tx_password = ':)';
       res.status(200).json({
         ok: true,
         user

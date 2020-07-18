@@ -8,15 +8,16 @@ var rolesValidos = {
   };
   
 const userSchema = new Schema({
-    nombre: {type: String, required: [true, 'El nombre es necesario']},
-    email: {type: String, unique: true, required: [true, 'El email es necesario']},
-    password: {type: String, required: [true, 'El password es necesario']},
-    empresa: {type: String, required: [true, 'El nombre de la empresa es necesario']},
-    role: {type: String, required: true, default: 'USER_ROLE', enum: rolesValidos},
-    img: {type: String, required: false},
-    google: {type: Boolean, required: true, default: false},
-    lastlogin: { type: Date, required: false },
-    createdat: { type: Date, required: false }
+    tx_name: {type: String, required: [true, 'El nombre es necesario']},
+    tx_email: {type: String, unique: true, required: [true, 'El email es necesario']},
+    tx_password: {type: String, required: [true, 'El password es necesario']},
+    id_company: {type: String, required: [true, 'El nombre de la empresa es necesario']},
+    id_role: {type: String, required: true, default: 'USER_ROLE', enum: rolesValidos},
+    id_type: {type: String, required: false},
+    tx_img: {type: String, required: false},
+    bl_google: {type: Boolean, required: true, default: false},
+    fc_lastlogin: { type: Date, required: false },
+    fc_createdat: { type: Date, required: false }
 },{ collection: "users" })
 
 userSchema.method('checkPassword', function(this: any, pass: String = ''): boolean {
@@ -30,15 +31,16 @@ userSchema.method('checkPassword', function(this: any, pass: String = ''): boole
 });
 
 interface User extends Document {
-    nombre: string;
-    email: string;
-    password: string;
-    empresa: string;
-    role: string;
-    img: string;
-    google: boolean;
-    lastlogin: Date;
-    createdat: Date;
+    tx_name: string;
+    tx_email: string;
+    tx_password: string;
+    id_company: string;
+    id_role: string;
+    id_type: string;
+    tx_img: string;
+    bl_google: boolean;
+    fc_lastlogin: Date;
+    fc_createdat: Date;
 }
 
 userSchema.plugin( uniqueValidator, {message: 'El campo {PATH} debe de ser unico'} );
