@@ -48,7 +48,6 @@ function createTicket(req: Request, res: Response) {
 		}
 
 		if (statusUpdated) {
-			console.log(statusUpdated);
 			idTicket = statusUpdated.id_ticket;
 		}
 

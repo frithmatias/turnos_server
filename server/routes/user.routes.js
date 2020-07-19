@@ -15,13 +15,5 @@ userRoutes.post('/google', user_controller_1.default.loginGoogle);
 userRoutes.post('/login', user_controller_1.default.loginUser);
 userRoutes.post('/register', user_controller_1.default.registerUser);
 userRoutes.post('/update', auth_1.default.verificaToken, user_controller_1.default.updateUser);
-// assistants
-userRoutes.post('/createassistant', auth_1.default.verificaToken, user_controller_1.default.createAssistant);
-userRoutes.get('/readassistants/:idCompany', auth_1.default.verificaToken, user_controller_1.default.readAssistants);
-userRoutes.delete('/deleteassistant/:idAssistant', auth_1.default.verificaToken, user_controller_1.default.deleteAssistant);
-// desktops
-userRoutes.post('/createdesktop', auth_1.default.verificaToken, user_controller_1.default.createDesktop);
-userRoutes.get('/readdesktops/:idCompany', auth_1.default.verificaToken, user_controller_1.default.readDesktops);
-userRoutes.delete('/deletedesktop/:idDesktop', auth_1.default.verificaToken, user_controller_1.default.deleteDesktop);
 // Para poder usarlo desde index.ts tengo que exportar userRoutes
 exports.default = userRoutes;

@@ -39,7 +39,6 @@ function createTicket(req, res) {
             idTicket = newTicketsStatus.id_ticket;
         }
         if (statusUpdated) {
-            console.log(statusUpdated);
             idTicket = statusUpdated.id_ticket;
         }
         // guardo el ticket

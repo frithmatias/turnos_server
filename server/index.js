@@ -5,15 +5,19 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 //import { SERVER_PORT } from "./global/environment";
 const server_1 = __importDefault(require("./classes/server"));
-// ROUTES
-const public_routes_1 = __importDefault(require("./routes/public.routes"));
-const ticket_routes_1 = __importDefault(require("./routes/ticket.routes"));
-const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const path_1 = __importDefault(require("path"));
 const express_1 = __importDefault(require("express"));
 const mongoose_1 = __importDefault(require("mongoose"));
+// ROUTES
+const public_routes_1 = __importDefault(require("./routes/public.routes"));
+const ticket_routes_1 = __importDefault(require("./routes/ticket.routes"));
+const company_routes_1 = __importDefault(require("./routes/company.routes"));
+const user_routes_1 = __importDefault(require("./routes/user.routes"));
+const skill_routes_1 = __importDefault(require("./routes/skill.routes"));
+const desktop_routes_1 = __importDefault(require("./routes/desktop.routes"));
+const assistant_routes_1 = __importDefault(require("./routes/assistant.routes"));
 // si en router.ts lo explorto de la siguiente manera
 // const router = Router();
 // export default router;
@@ -36,9 +40,13 @@ server.app.use(body_parser_1.default.json());
 // CORS
 server.app.use(cors_1.default({ origin: true, credentials: true })); // permito que cualquier persona puede llamar mis servicios.
 // RUTAS
-server.app.use('/p', public_routes_1.default);
-server.app.use('/u', user_routes_1.default);
 server.app.use('/t', ticket_routes_1.default);
+server.app.use('/p', public_routes_1.default);
+server.app.use('/c', company_routes_1.default);
+server.app.use('/u', user_routes_1.default);
+server.app.use('/s', skill_routes_1.default);
+server.app.use('/d', desktop_routes_1.default);
+server.app.use('/a', assistant_routes_1.default);
 server.start(() => {
     console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }
 });

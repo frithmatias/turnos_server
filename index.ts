@@ -1,16 +1,20 @@
 //import { SERVER_PORT } from "./global/environment";
 import Server from './classes/server';
-
-// ROUTES
-import publicRoutes from './routes/public.routes';
-import ticketRoutes from './routes/ticket.routes';
-import userRoutes from './routes/user.routes';
-
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import path from 'path';
 import express from 'express';
 import mongoose from 'mongoose';
+
+// ROUTES
+import publicRoutes from './routes/public.routes';
+import ticketRoutes from './routes/ticket.routes';
+import companyRoutes from './routes/company.routes';
+import userRoutes from './routes/user.routes';
+import skillRoutes from './routes/skill.routes';
+import desktopRoutes from './routes/desktop.routes';
+import assistantRoutes from './routes/assistant.routes';
+
 
 // si en router.ts lo explorto de la siguiente manera
 // const router = Router();
@@ -42,9 +46,14 @@ server.app.use(cors({ origin: true, credentials: true })); // permito que cualqu
 
 
 // RUTAS
-server.app.use('/p', publicRoutes);
-server.app.use('/u', userRoutes);
 server.app.use('/t', ticketRoutes);
+server.app.use('/p', publicRoutes);
+server.app.use('/c', companyRoutes);
+
+server.app.use('/u', userRoutes);
+server.app.use('/s', skillRoutes);
+server.app.use('/d', desktopRoutes);
+server.app.use('/a', assistantRoutes);
 
 server.start(() => {
 	console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }

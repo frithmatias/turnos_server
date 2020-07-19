@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 
 // MIDDLEWARES
 import  mdAuth  from '../middlewares/auth';
