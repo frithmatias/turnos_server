@@ -1,25 +1,26 @@
 "use strict";
-const user_model_1 = require("../models/user.model");
+const company_model_1 = require("../models/company.model");
 function getClientData(req, res) {
     var company = String(req.params.company);
-    user_model_1.User.findOne({ id_company: company }, 'id_company tx_email', (err, user) => {
-        if (err) {
-            return res.status(500).json({
-                ok: false,
-                mensaje: "Error al buscar el usuario",
-                errors: err
-            });
-        }
-        if (!user) {
+    console.log(company);
+    company_model_1.Company.findOne({ tx_company_name: company }).then(companyDB => {
+        if (!companyDB) {
             return res.status(400).json({
                 ok: false,
-                mensaje: "No existe un usuario con el id solicitado"
+                msg: "No existe la empresa",
+                company: null
             });
         }
-        user.tx_password = ':)';
         res.status(200).json({
             ok: true,
-            user
+            msg: 'Empresa obtenida correctamente',
+            company: companyDB
+        });
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: "Error al buscar el usuario",
+            company: null
         });
     });
 }

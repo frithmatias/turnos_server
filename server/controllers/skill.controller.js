@@ -26,6 +26,7 @@ function createSkill(req, res) {
 }
 function readSkills(req, res) {
     let idCompany = req.params.idCompany;
+    console.log(idCompany);
     skill_model_1.Skill.find({ id_company: idCompany }).then((skills) => {
         res.status(200).json({
             ok: true,

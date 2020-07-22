@@ -1,9 +1,10 @@
 import { Request, Response } from 'express';
-import { User } from '../models/user.model';
-import Token from '../classes/token';
 import bcrypt from 'bcrypt';
+
+import Token from '../classes/token';
 import environment from '../global/environment';
-import { Desktop } from '../models/desktop.model';
+
+import { User } from '../models/user.model';
 import { Company } from '../models/company.model';
 
 // Google Login
@@ -24,6 +25,7 @@ function registerUser(req: any, res: Response) {
 
   var company = new Company({
     tx_company_name: body.company.tx_company_name,
+    tx_public_name: body.company.tx_public_name,
     tx_address_street: body.company.tx_address_street,
     tx_address_number: body.company.tx_address_number,
     cd_city: body.company.cd_city,
@@ -32,9 +34,8 @@ function registerUser(req: any, res: Response) {
   });
 
   company.save().then((companySaved) => {
-    console.log(companySaved);
+    
     // Save User
-
     var user = new User({
       tx_name: body.user.tx_name,
       tx_email: body.user.tx_email,
@@ -355,15 +356,15 @@ function loginUser(req: Request, res: Response) {
 function obtenerMenu(id_role: string) {
   var menu = [];
 
-
-  if ((id_role === "ASSISTANT_ROLE") || (id_role === "CLIENT_ROLE")) {
+  console.log(id_role)
+  if ((id_role === "ASSISTANT_ROLE") || (id_role === "USER_ROLE")) {
     menu.push({
       titulo: "Asistente",
-      icono: "mdi mdi-settings",
+      icon: "mdi mdi-settings",
       submenu: [
-        { titulo: "Home", url: "/asistente/home", icono: "mdi mdi-search-web" },
-        { titulo: "Dashboard", url: "/asistente/dashboard", icono: "mdi mdi-face" },
-        { titulo: "Escritorio", url: "/asistente/escritorio", icono: "mdi mdi-format-color-fill" },
+        { titulo: "Home", url: "/asistente/home", icon: "home" },
+        { titulo: "Dashboard", url: "/asistente/dashboard", icon: "dashboard" },
+        { titulo: "Escritorio", url: "/asistente/escritorio", icon: "desktop_windows" },
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
@@ -372,15 +373,15 @@ function obtenerMenu(id_role: string) {
   if (id_role === "USER_ROLE") {
     menu.push({
       titulo: "Usuario",
-      icono: "mdi mdi-settings",
+      icon: "mdi mdi-settings",
       submenu: [
-        { titulo: "Home", url: "/user/home", icono: "mdi mdi-search-web" },
-        { titulo: "Mi Perfil", url: "/user/profile", icono: "mdi mdi-face" },
-        { titulo: "Asistentes", url: "/user/assistants", icono: "mdi mdi-format-color-fill" },
-        { titulo: "Ventanillas", url: "/user/desktops", icono: "mdi mdi-plus-circle-outline" },
-        { titulo: "Skill", url: "/user/skills", icono: "mdi mdi-plus-circle-outline" },
-        { titulo: "Turnos", url: "/user/tickets", icono: "mdi mdi-heart" },
-        { titulo: "Dashboard", url: "/user/dashboard", icono: "mdi mdi-city" },
+        { titulo: "Home", url: "/user/home", icon: "home_work" },
+        { titulo: "Mi Perfil", url: "/user/profile", icon: "face" },
+        { titulo: "Asistentes", url: "/user/assistants", icon: "supervised_user_circle" },
+        { titulo: "Ventanillas", url: "/user/desktops", icon: "exit_to_app" },
+        { titulo: "Skills", url: "/user/skills", icon: "playlist_add_check" },
+        { titulo: "Turnos", url: "/user/tickets", icon: "bookmark" },
+        { titulo: "Dashboard", url: "/user/dashboard", icon: "dashboard" },
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
@@ -388,12 +389,12 @@ function obtenerMenu(id_role: string) {
   if (id_role === "ADMIN_ROLE") {
     menu.push({
       titulo: "Administrador",
-      icono: "mdi mdi-settings",
+      icon: "mdi mdi-settings",
       submenu: [
-        { titulo: "Usuarios", url: "/admin/users", icono: "mdi mdi-account-multiple-plus" },
-        { titulo: "Empresas", url: "/admin/company", icono: "mdi mdi-city" },
-        { titulo: "Turnos", url: "/admin/tickets", icono: "mdi mdi-table-large" },
-        { titulo: "Metricas", url: "/admin/metrics", icono: "mdi mdi-console" }
+        { titulo: "Usuarios", url: "/admin/users", icon: "mdi mdi-account-multiple-plus" },
+        { titulo: "Empresas", url: "/admin/company", icon: "mdi mdi-city" },
+        { titulo: "Turnos", url: "/admin/tickets", icon: "mdi mdi-table-large" },
+        { titulo: "Metricas", url: "/admin/metrics", icon: "mdi mdi-console" }
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }

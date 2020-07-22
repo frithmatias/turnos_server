@@ -6,7 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const mongoose_1 = require("mongoose");
 const mongoose_unique_validator_1 = __importDefault(require("mongoose-unique-validator"));
 const companySchema = new mongoose_1.Schema({
-    tx_company_name: { type: String, unique: true, required: [true, 'El tx_name es necesario'] },
+    tx_company_name: { type: String, unique: true, required: [true, 'El tx_company_name es necesario'] },
+    tx_public_name: { type: String, unique: true, required: [true, 'El tx_public_name es necesario'] },
     tx_address_street: { type: String, required: false },
     tx_address_number: { type: String, required: false },
     cd_city: { type: String, required: false },

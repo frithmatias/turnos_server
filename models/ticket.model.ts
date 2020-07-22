@@ -6,7 +6,7 @@ const ticketsSchema = new Schema({
     id_socket_desk: {type: String, required: false},
     id_desk: {type: Number, required: false},
     id_company: {type: String, required: [true, 'El id de la empresa es necesario']},
-    id_type: {type: String, required: [true, 'El tipo de ticket es necesario']},
+    id_skill: {type: String, required: [true, 'El tipo de ticket es necesario']},
     tm_start: {type: Number, required: true, default: + new Date().getTime()},
     tm_att: {type: Number, required: false },
     tm_end: { type: Number, required: false },
@@ -18,7 +18,7 @@ interface Ticket extends Document {
     id_socket_desk: string | null;
     id_desk: number | null;
     id_company: string;
-    id_type: string;
+    id_skill: string;
     tm_start: number;
     tm_att: number | null;
     tm_end: number | null;

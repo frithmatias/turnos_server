@@ -7,9 +7,8 @@ const ticket_controller_1 = __importDefault(require("../controllers/ticket.contr
 // Borrar marcador
 exports.escucharMensajes = (cliente, io) => {
     // Orden enviada por el cliente.
-    cliente.on('cliente-en-camino', () => {
-        const myDestination = ticket_controller_1.default.getMyDestination(cliente);
-        io.to(myDestination).emit('cliente-en-camino');
+    cliente.on('cliente-en-camino', (idSocketDesk) => {
+        io.to(idSocketDesk).emit('cliente-en-camino');
     });
     cliente.on('mensaje-publico', (payload) => {
         io.emit('mensaje-publico', payload);

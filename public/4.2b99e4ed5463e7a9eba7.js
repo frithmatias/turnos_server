@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[4],{GCp2:function(n,t,e){"use strict";e.r(t),e.d(t,"AdminModule",(function(){return i}));var o=e("SVse"),r=e("8Y7J");let i=(()=>{class n{}return n.\u0275mod=r.Jb({type:n}),n.\u0275inj=r.Ib({factory:function(t){return new(t||n)},imports:[[o.b]]}),n})()}}]);

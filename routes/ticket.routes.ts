@@ -17,9 +17,9 @@ ticketRoutes.get('/gettickets/:id_company', ticketController.getTickets);
 ticketRoutes.put('/actualizarsocket', ticketController.updateSocket);
 
 // desktop requests
-ticketRoutes.post('/atenderticket', mdAuth.verificaToken, ticketController.takeTicket);
+ticketRoutes.get('/pendingticket/:idCompany/:idDesk', mdAuth.verificaToken, ticketController.readPendingTicket);
+ticketRoutes.post('/taketicket/:deskData', mdAuth.verificaToken, ticketController.takeTicket);
 ticketRoutes.post('/devolverticket', mdAuth.verificaToken, ticketController.rejectTicket);
 ticketRoutes.post('/finalizarticket', mdAuth.verificaToken, ticketController.endTicket);
-ticketRoutes.get('/pendingticket/:id_desk', mdAuth.verificaToken, ticketController.getPendingTicket);
 
 export default ticketRoutes;

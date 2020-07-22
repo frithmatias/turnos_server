@@ -16,7 +16,7 @@ const userSchema = new mongoose_1.Schema({
     tx_password: { type: String, required: [true, 'El password es necesario'] },
     id_company: { type: String, required: [true, 'El nombre de la empresa es necesario'] },
     id_role: { type: String, required: true, default: 'USER_ROLE', enum: rolesValidos },
-    id_type: { type: String, required: false },
+    id_skills: { type: [String], required: false },
     tx_img: { type: String, required: false },
     bl_google: { type: Boolean, required: true, default: false },
     fc_lastlogin: { type: Date, required: false },

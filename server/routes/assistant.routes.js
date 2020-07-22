@@ -11,6 +11,7 @@ const assistant_controller_1 = __importDefault(require("../controllers/assistant
 // ROUTES
 const assistantRoutes = express_1.Router();
 assistantRoutes.post('/createassistant', auth_1.default.verificaToken, assistant_controller_1.default.createAssistant);
+assistantRoutes.post('/updateassistant', auth_1.default.verificaToken, assistant_controller_1.default.updateAssistant);
 assistantRoutes.get('/readassistants/:idCompany', auth_1.default.verificaToken, assistant_controller_1.default.readAssistants);
 assistantRoutes.delete('/deleteassistant/:idAssistant', auth_1.default.verificaToken, assistant_controller_1.default.deleteAssistant);
 // Para poder usarlo desde index.ts tengo que exportar assistantRoutes

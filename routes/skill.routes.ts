@@ -10,7 +10,7 @@ import SkillController from '../controllers/skill.controller';
 const skillRoutes = Router();
 
 skillRoutes.post('/createskill', mdAuth.verificaToken, SkillController.createSkill);
-skillRoutes.get('/readskills/:idCompany', mdAuth.verificaToken, SkillController.readSkills);
+skillRoutes.get('/readskills/:idCompany', SkillController.readSkills);
 skillRoutes.delete('/deleteskill/:idSkill', mdAuth.verificaToken, SkillController.deleteSkill);
 
 // Para poder usarlo desde index.ts tengo que exportar skillRoutes

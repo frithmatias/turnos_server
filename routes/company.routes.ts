@@ -9,7 +9,9 @@ import CompanyController from '../controllers/company.controller';
 // ROUTES
 const companyRoutes = Router();
 
-companyRoutes.post('/update', mdAuth.verificaToken, CompanyController.updateCompany);
+companyRoutes.post('/updatecompany', mdAuth.verificaToken, CompanyController.updateCompany);
+companyRoutes.get('/readcompany/:idCompany', CompanyController.readCompany);
+
 
 // Para poder usarlo desde index.ts tengo que exportar companyRoutes
 export default companyRoutes;

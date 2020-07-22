@@ -10,19 +10,19 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 function createAssistant(req, res) {
     var body = req.body;
     var assistant = new user_model_1.User({
-        tx_email: body.tx_email,
         tx_name: body.tx_name,
-        id_company: body.id_company,
-        id_transaction: body.id_transaction,
+        tx_email: body.tx_email,
         tx_password: bcrypt_1.default.hashSync(body.tx_password, 10),
-        tx_img: body.tx_img,
+        id_company: body.id_company,
         id_role: 'ASSISTANT_ROLE',
+        id_skills: body.id_skills,
+        tx_img: body.tx_img,
         fc_createdat: new Date()
     });
     assistant.save().then((assistantSaved) => {
         res.status(200).json({
             ok: true,
-            msg: 'Asistente guardado correctamente',
+            msg: 'Usuario guardado correctamente',
             assistant: assistantSaved
         });
     }).catch((err) => {
@@ -38,7 +38,7 @@ function readAssistants(req, res) {
     user_model_1.User.find({ id_company: idCompany }).then((assistants) => {
         res.status(200).json({
             ok: true,
-            msg: 'Asistentes obtenidos correctamente',
+            msg: 'Usuarios obtenidos correctamente',
             assistants
         });
     }).catch(() => {
@@ -49,12 +49,36 @@ function readAssistants(req, res) {
         });
     });
 }
+function updateAssistant(req, res) {
+    var body = req.body;
+    let assistant = {
+        tx_email: body.tx_email,
+        tx_name: body.tx_name,
+        id_skills: body.id_skills
+    };
+    if (body.tx_password !== '******') {
+        assistant.tx_password = bcrypt_1.default.hashSync(body.tx_password, 10);
+    }
+    user_model_1.User.findByIdAndUpdate(body._id, assistant).then(assistantDB => {
+        return res.status(200).json({
+            ok: true,
+            msg: 'Se actualizo el asistente correctamente',
+            assistant: assistantDB
+        });
+    }).catch(() => {
+        return res.status(400).json({
+            ok: false,
+            msg: 'Ocurrio un error al actualizar el asistente',
+            assistant: null
+        });
+    });
+}
 function deleteAssistant(req, res) {
     let idAssistant = req.params.idAssistant;
     user_model_1.User.findByIdAndDelete(idAssistant).then((assistantDeleted) => {
         res.status(200).json({
             ok: true,
-            msg: 'Asistente eliminado correctamente',
+            msg: 'Usuario eliminado correctamente',
             assistant: assistantDeleted
         });
     }).catch(() => {
@@ -68,5 +92,6 @@ function deleteAssistant(req, res) {
 module.exports = {
     createAssistant,
     readAssistants,
+    updateAssistant,
     deleteAssistant,
 };

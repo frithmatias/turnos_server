@@ -6,17 +6,18 @@ const server_1 = __importDefault(require("../classes/server"));
 // MODELS
 const ticket_model_1 = require("../models/ticket.model");
 const status_model_1 = require("../models/status.model");
+const user_model_1 = require("../models/user.model");
 function createTicket(req, res) {
     // ! con findOneAndUpdate en lugar de findOne, ++, y luego save() puedo incrementar id_ticket 
     // ! antes de que otro usuario pueda solicitar un ticket en ese instante y obtener el mismo número.
     const idDay = +new Date().getDate();
     const idMonth = +new Date().getMonth() + 1;
     const idYear = +new Date().getFullYear();
-    const { idSocket, typeTicket, idCompany } = req.body;
+    const { idSocket, idSkill, idCompany } = req.body;
     var idTicket;
     status_model_1.Status.findOneAndUpdate({
         id_company: idCompany,
-        id_type: typeTicket,
+        id_skill: idSkill,
         id_year: idYear,
         id_month: idMonth,
         id_day: idDay
@@ -24,7 +25,7 @@ function createTicket(req, res) {
         if (!statusUpdated) {
             let newTicketsStatus = new status_model_1.Status({
                 id_company: idCompany,
-                id_type: typeTicket,
+                id_skill: idSkill,
                 id_year: idYear,
                 id_month: idMonth,
                 id_day: idDay,
@@ -48,12 +49,19 @@ function createTicket(req, res) {
             id_socket_desk: null,
             id_desk: null,
             id_company: idCompany,
-            id_type: typeTicket,
+            id_skill: idSkill,
             tm_start: +new Date().getTime(),
             tm_att: null,
             tm_end: null
         });
         ticketDB.save().then((ticketSaved) => {
+            const server = server_1.default.instance;
+            server.io.to(idSocket).emit('mensaje-privado', { mensaje: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
+            getPendingTickets(idCompany).then(resp => {
+                if (resp.ok) {
+                    server.io.emit('nuevo-turno', resp.num);
+                }
+            });
             res.status(201).json({
                 ok: true,
                 mensaje: "Ticket guardado correctamente.",
@@ -71,13 +79,103 @@ function createTicket(req, res) {
             mensaje: "Error al procesar el status de los tickets para la empresa."
         });
     });
-    const server = server_1.default.instance;
-    console.log('enviando mensaje de bienvenida a', idSocket);
-    server.io.to(idSocket).emit('mensaje-privado', { mensaje: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
-    getPendingTickets(idCompany).then(resp => {
-        if (resp.ok) {
-            server.io.emit('nuevo-turno', resp.num);
+}
+;
+function readPendingTicket(req, res) {
+    var idCompany = req.params.idCompany;
+    var idDesk = req.params.idDesk;
+    ticket_model_1.Ticket.findOne({ id_company: idCompany, id_desk: idDesk }).then(ticketPending => {
+        if (!ticketPending) {
+            return res.status(200).json({
+                ok: true,
+                msg: "No existe ticket pendiente de resolución."
+            });
         }
+        return res.status(200).json({
+            ok: true,
+            msg: "Existe un ticket pendiente de resolución.",
+            ticket: ticketPending
+        });
+    }).catch((err) => {
+        return res.status(400).json({
+            ok: false,
+            msg: "Error al obtener el socket del ticket."
+        });
+    });
+}
+;
+function takeTicket(req, res) {
+    const server = server_1.default.instance;
+    const { idDesk, idSocketDesk, idAssistant } = req.body;
+    user_model_1.User.findById(idAssistant).then(assistantDB => {
+        if (!assistantDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No existe el asistente!',
+                assistant: null
+            });
+        }
+        if (assistantDB) {
+            // Cierro, Si existe, el ticket recientemente atendido por el escritorio.
+            ticket_model_1.Ticket.findOne({ id_company: assistantDB.id_company, id_desk: idDesk, tm_end: null }).then(ticketDB => {
+                if (ticketDB) {
+                    ticketDB.tm_end = +new Date().getTime();
+                    ticketDB.save().then(() => {
+                        // actualiza sólo la pantalla del cliente con el turno finalizado
+                        server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
+                    }).catch(() => {
+                        return res.status(500).json({
+                            ok: false,
+                            msg: 'Ocurrio un error al cerrar el ticket anterior.',
+                            ticket: ticketDB
+                        });
+                    });
+                }
+            });
+            // Busco un nuevo ticket para atender
+            ticket_model_1.Ticket.findOne({ id_company: assistantDB.id_company, id_desk: null, tm_end: null }).then(ticketDB => {
+                if (!ticketDB) {
+                    return res.status(200).json({
+                        ok: false,
+                        msg: 'No existen tickets pendientes de resolución',
+                        ticket: null
+                    });
+                }
+                if (ticketDB) {
+                    ticketDB.tm_att = +new Date().getTime();
+                    ticketDB.id_desk = idDesk;
+                    ticketDB.id_socket_desk = idSocketDesk;
+                    ticketDB.save().then(ticketSaved => {
+                        server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { mensaje: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
+                        //server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
+                        server.io.emit('actualizar-pantalla'); // para clientes
+                        return res.status(200).json({
+                            ok: true,
+                            msg: 'Ticket obtenido correctamente',
+                            ticket: ticketDB
+                        });
+                    }).catch(() => {
+                        return res.status(400).json({
+                            ok: false,
+                            msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
+                            ticket: null
+                        });
+                    });
+                }
+            }).catch(() => {
+                return res.status(500).json({
+                    ok: false,
+                    msg: 'Error al consultar el ticket',
+                    ticket: null
+                });
+            });
+        }
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al consultar el asistente',
+            assistant: null
+        });
     });
 }
 ;
@@ -97,40 +195,6 @@ function cancelTicket(req, res) {
         });
     });
 }
-function takeTicket(req, res) {
-    const { idDesk, idType, idDeskSocket, idCompany } = req.body;
-    ticket_model_1.Ticket.findOne({ id_company: idCompany, id_type: idType, tm_att: null })
-        .then((ticketDB) => {
-        if (!ticketDB) {
-            return res.status(200).json({
-                ok: false,
-                msg: 'No existen tickets pendientes de resolución',
-                ticket: null
-            });
-        }
-        return res.status(200).json({
-            ok: true,
-            msg: 'Ticket pendiente de resolución obtenido correctamente',
-            ticket: ticketDB
-        });
-    })
-        .catch((err) => {
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error obteniendo un ticket pendiente',
-            ticket: null
-        });
-    });
-    // creo una misma instancia corriendo en toda la app con el patrón singleton
-    const server = server_1.default.instance;
-    server.io.emit('actualizar-pantalla'); // para clientes
-    getPendingTickets(idCompany).then(resp => {
-        if (resp.ok) {
-            server.io.emit('nuevo-turno', resp.num); // para asistentes
-        }
-    });
-}
-;
 function rejectTicket(req, res) {
     // const { idCompany, idDesk } = req.body;
     // todo: poner a null tm_att
@@ -148,29 +212,6 @@ function endTicket(req, res) {
     // const server = Server.instance;
     // // se actualiza la pantalla SOLO del cliente con el turno finalizado
     // if (socketCli) { server.io.to(socketCli).emit('actualizar-pantalla'); }
-}
-;
-function getPendingTicket(req, res) {
-    var idDesk = Number(req.params.id_desk);
-    ticket_model_1.Ticket.findById(idDesk).then(ticketPending => {
-        if (!ticketPending) {
-            return res.status(200).json({
-                ok: true,
-                mensaje: "No existe ticket pendiente de resolución."
-            });
-        }
-        return res.status(200).json({
-            ok: true,
-            mensaje: "Existe un ticket pendiente de resolución.",
-            ticket: ticketPending
-        });
-    }).catch((err) => {
-        return res.status(400).json({
-            ok: false,
-            mensaje: "Error al obtener el socket del ticket."
-        });
-    });
-    // res.json(ticket.getDesktopStatus(id_desk));
 }
 ;
 function getTickets(req, res) {
@@ -259,7 +300,7 @@ module.exports = {
     takeTicket,
     rejectTicket,
     endTicket,
-    getPendingTicket,
+    readPendingTicket,
     getTickets,
     updateSocket,
     getMyDestination,

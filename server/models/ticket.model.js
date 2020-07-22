@@ -7,7 +7,7 @@ const ticketsSchema = new mongoose_1.Schema({
     id_socket_desk: { type: String, required: false },
     id_desk: { type: Number, required: false },
     id_company: { type: String, required: [true, 'El id de la empresa es necesario'] },
-    id_type: { type: String, required: [true, 'El tipo de ticket es necesario'] },
+    id_skill: { type: String, required: [true, 'El tipo de ticket es necesario'] },
     tm_start: { type: Number, required: true, default: +new Date().getTime() },
     tm_att: { type: Number, required: false },
     tm_end: { type: Number, required: false },

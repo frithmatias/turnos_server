@@ -3,6 +3,30 @@ const company_model_1 = require("../models/company.model");
 // ========================================================
 // Company Methods
 // ========================================================
+function readCompany(req, res) {
+    var idCompany = String(req.params.idCompany);
+    console.log(idCompany);
+    company_model_1.Company.findOne({ tx_public_name: idCompany }).then(companyDB => {
+        if (!companyDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: "No existe la empresa",
+                company: null
+            });
+        }
+        res.status(200).json({
+            ok: true,
+            msg: 'Empresa obtenida correctamente',
+            company: companyDB
+        });
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: "Error al buscar el usuario",
+            company: null
+        });
+    });
+}
 function updateCompany(req, res) {
     var body = req.body;
     var id = req.params.id;
@@ -42,5 +66,6 @@ function updateCompany(req, res) {
     });
 }
 module.exports = {
+    readCompany,
     updateCompany,
 };
