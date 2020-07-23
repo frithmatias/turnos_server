@@ -14,5 +14,4 @@ assistantRoutes.post('/updateassistant', mdAuth.verificaToken, AssistantControll
 assistantRoutes.get('/readassistants/:idCompany', mdAuth.verificaToken, AssistantController.readAssistants);
 assistantRoutes.delete('/deleteassistant/:idAssistant', mdAuth.verificaToken, AssistantController.deleteAssistant);
 
-// Para poder usarlo desde index.ts tengo que exportar assistantRoutes
 export default assistantRoutes;

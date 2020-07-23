@@ -5,7 +5,6 @@ const company_model_1 = require("../models/company.model");
 // ========================================================
 function readCompany(req, res) {
     var idCompany = String(req.params.idCompany);
-    console.log(idCompany);
     company_model_1.Company.findOne({ tx_public_name: idCompany }).then(companyDB => {
         if (!companyDB) {
             return res.status(400).json({

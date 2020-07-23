@@ -7,11 +7,11 @@ import { DeskStat } from '../models/deskstat.model';
 // ========================================================
 
 function createDesktop(req: Request, res: Response) {
-    console.log(req.body)
+
     var body = req.body;
     var desktop = new Desktop({
         id_company: body.id_company,
-        id_desktop: body.id_desktop,
+        cd_desktop: body.cd_desktop,
         id_assistant: body.id_assistant
     });
 
@@ -66,52 +66,94 @@ function deleteDesktop(req: Request, res: Response) {
 
 function takeDesktop(req: Request, res: Response) {
 
-    var desktop = new DeskStat({
-        id_company: req.body.idCompany,
-        id_desktop: req.body.idDesktop,
-        id_assistant: req.body.idAssistant,
-        fc_start: + new Date().getTime()
-    });
-
-    desktop.save().then((desktopSaved) => {
-
-        return res.status(200).json({
-            ok: true,
-            msg: 'Se asigno el asistente al escritorio',
-            desktop: desktopSaved
-        });
-
-    }).catch(() => {
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error al guardar el asistente para el escritorio',
-            desktop: null
-        });
-    });
-}
-
-function releaseDesktop(req: Request, res: Response ) {
-    
     let idCompany = req.body.idCompany;
     let idDesktop = req.body.idDesktop;
     let idAssistant = req.body.idAssistant;
-    console.log('FINALIZANDO ESCTIRORIO', idDesktop, idCompany, idAssistant)
-    DeskStat.findOneAndUpdate(
-        {id_company: idCompany, id_desktop: idDesktop, id_assistant: idAssistant}, 
-        {fc_end: + new Date().getTime()}
-    ).then(desktopReleased => {
-        return res.status(200).json({
-            ok: true,
-            msg: 'Esctirorio finalizado correctamente',
-            desktop: desktopReleased
-        })
-    }).catch(()=> {
+
+    // actualizo el escritorio
+    Desktop.findByIdAndUpdate(idDesktop, { id_assistant: idAssistant }).then(desktopUpdated => {
+
+        // actualizo el estado del escritorio
+        var desktop_session = new DeskStat({
+            id_company: idCompany,
+            id_desktop: idDesktop,
+            id_assistant: idAssistant,
+            fc_start: + new Date().getTime()
+        });
+
+        desktop_session.save().then((sessionSaved) => {
+
+            return res.status(200).json({
+                ok: true,
+                msg: 'Se asigno el asistente al escritorio',
+                desktop: desktopUpdated
+            });
+
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al guardar el asistente para el escritorio',
+                desktop: null
+            });
+        });
+
+    }).catch(() => {
         return res.status(400).json({
-            ok: true,
-            msg: 'No se pudo finalizar el escritorio',
+            ok: false,
+            msg: 'No existen escritorios disponibles',
+            desktop: null
+        });
+    })
+
+
+
+}
+
+function releaseDesktop(req: Request, res: Response) {
+
+    let desktop = req.body;
+
+    Desktop.findByIdAndUpdate(desktop._id, { id_assistant: null }).then(desktopUpdated => {
+        if (!desktopUpdated) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No existe el escritorio que se desea finalizar',
+                desktop: null
+            })
+        } else {
+            DeskStat.findOneAndUpdate(
+                // find session
+                {
+                    id_company: desktop.id_company,
+                    id_desktop: desktop._id,
+                    id_assistant: desktop.id_assistant
+                }, {
+                // update
+                id_assistant: null
+            }).then(desktopReleased => {
+                return res.status(200).json({
+                    ok: true,
+                    msg: 'Esctirorio finalizado correctamente',
+                    desktop: desktopReleased
+                })
+            }).catch(() => {
+                return res.status(400).json({
+                    ok: true,
+                    msg: 'No se pudo finalizar el escritorio',
+                    desktop: null
+                })
+            })
+        }
+
+    }).catch(()=>{
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al buscar el escritorio a finalizar',
             desktop: null
         })
     })
+
+
 }
 
 export = {

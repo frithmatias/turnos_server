@@ -15,7 +15,7 @@ function createTicket(req: Request, res: Response) {
 	const idDay = + new Date().getDate();
 	const idMonth = + new Date().getMonth() + 1;
 	const idYear = + new Date().getFullYear();
-	const { idSocket, idSkill, idCompany } = req.body;
+	const { idCompany, idSkill, cdSkill, idSocket } = req.body;
 
 	var idTicket: number;
 
@@ -37,6 +37,7 @@ function createTicket(req: Request, res: Response) {
 				id_day: idDay,
 				id_ticket: 1
 			})
+
 			newTicketsStatus.save().catch(() => {
 				return res.status(400).json({
 					ok: false,
@@ -59,6 +60,7 @@ function createTicket(req: Request, res: Response) {
 			id_desk: null,
 			id_company: idCompany,
 			id_skill: idSkill,
+			cd_skill: cdSkill,
 			tm_start: + new Date().getTime(),
 			tm_att: null,
 			tm_end: null
@@ -124,7 +126,7 @@ function readPendingTicket(req: Request, res: Response) {
 	}).catch((err) => {
 		return res.status(400).json({
 			ok: false,
-			msg: "Error al obtener el socket del ticket."
+			msg: "Error al buscar ticket pendiente."
 		});
 	});
 };
@@ -165,7 +167,12 @@ function takeTicket(req: Request, res: Response) {
 			})
 
 			// Busco un nuevo ticket para atender
-			Ticket.findOne({id_company: assistantDB.id_company, id_desk: null, tm_end: null}).then(ticketDB => {
+			Ticket.findOne({
+				id_company: assistantDB.id_company, 
+				id_skill: { $in: assistantDB.id_skills }, 
+				id_desk: null, 
+				tm_end: null
+			}).then(ticketDB => {
 
 				if(!ticketDB){
 					return res.status(200).json({

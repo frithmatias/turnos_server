@@ -7,7 +7,7 @@ function createSkill(req, res) {
     var body = req.body;
     var skill = new skill_model_1.Skill({
         id_company: body.id_company,
-        id_skill: body.id_skill,
+        cd_skill: body.cd_skill,
         tx_skill: body.tx_skill
     });
     skill.save().then((skillSaved) => {
@@ -26,7 +26,6 @@ function createSkill(req, res) {
 }
 function readSkills(req, res) {
     let idCompany = req.params.idCompany;
-    console.log(idCompany);
     skill_model_1.Skill.find({ id_company: idCompany }).then((skills) => {
         res.status(200).json({
             ok: true,

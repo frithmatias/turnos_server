@@ -15,5 +15,4 @@ userRoutes.post('/login', UserController.loginUser);
 userRoutes.post('/register', UserController.registerUser);
 userRoutes.post('/update', mdAuth.verificaToken, UserController.updateUser);
 
-// Para poder usarlo desde index.ts tengo que exportar userRoutes
 export default userRoutes;

@@ -13,5 +13,4 @@ const skillRoutes = express_1.Router();
 skillRoutes.post('/createskill', auth_1.default.verificaToken, skill_controller_1.default.createSkill);
 skillRoutes.get('/readskills/:idCompany', skill_controller_1.default.readSkills);
 skillRoutes.delete('/deleteskill/:idSkill', auth_1.default.verificaToken, skill_controller_1.default.deleteSkill);
-// Para poder usarlo desde index.ts tengo que exportar skillRoutes
 exports.default = skillRoutes;

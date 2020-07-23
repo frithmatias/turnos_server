@@ -15,5 +15,4 @@ desktopRoutes.get('/readdesktops/:idCompany', auth_1.default.verificaToken, desk
 desktopRoutes.delete('/deletedesktop/:idDesktop', auth_1.default.verificaToken, desktop_controller_1.default.deleteDesktop);
 desktopRoutes.post('/takedesktop', auth_1.default.verificaToken, desktop_controller_1.default.takeDesktop);
 desktopRoutes.post('/releasedesktop', auth_1.default.verificaToken, desktop_controller_1.default.releaseDesktop);
-// Para poder usarlo desde index.ts tengo que exportar desktopRoutes
 exports.default = desktopRoutes;

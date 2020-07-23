@@ -3,13 +3,13 @@ import uniqueValidator from 'mongoose-unique-validator';
 
 const skillSchema = new Schema({
     id_company: {type: String, required: [true, 'El id_company es necesario']},
-    id_skill: {type: String, required: [true, 'El id_skill es necesario']},
+    cd_skill: {type: String, required: [true, 'El cd_skill es necesario']},
     tx_skill: {type: String, required: [true, 'El tx_skill es necesario']},
 },{ collection: "skills" })
 
 interface Skill extends Document {
     id_company: string;
-    id_skill: string;
+    cd_skill: string;
     tx_skill: string;
 }
 skillSchema.plugin( uniqueValidator, {message: 'El campo {PATH} debe de ser unico'} );

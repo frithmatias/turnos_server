@@ -13,5 +13,4 @@ skillRoutes.post('/createskill', mdAuth.verificaToken, SkillController.createSki
 skillRoutes.get('/readskills/:idCompany', SkillController.readSkills);
 skillRoutes.delete('/deleteskill/:idSkill', mdAuth.verificaToken, SkillController.deleteSkill);
 
-// Para poder usarlo desde index.ts tengo que exportar skillRoutes
 export default skillRoutes;

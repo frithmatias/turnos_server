@@ -36,7 +36,7 @@ interface User extends Document {
     tx_password: string;
     id_company: string;
     id_role: string;
-    id_skills: string;
+    id_skills: string[];
     tx_img: string;
     bl_google: boolean;
     fc_lastlogin: Date;

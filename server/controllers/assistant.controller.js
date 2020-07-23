@@ -52,6 +52,7 @@ function readAssistants(req, res) {
 function updateAssistant(req, res) {
     var body = req.body;
     let assistant = {
+        id_role: body.id_role,
         tx_email: body.tx_email,
         tx_name: body.tx_name,
         id_skills: body.id_skills

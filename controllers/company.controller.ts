@@ -7,7 +7,7 @@ import { Company } from '../models/company.model';
 
 function readCompany(req: Request, res: Response) {
   var idCompany = String(req.params.idCompany);
-  console.log(idCompany);
+
   Company.findOne({ tx_public_name: idCompany }).then(companyDB => {
 
     if (!companyDB) {

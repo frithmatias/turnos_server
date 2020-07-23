@@ -10,4 +10,5 @@ const public_controller_1 = __importDefault(require("../controllers/public.contr
 const publicRoutes = express_1.Router();
 publicRoutes.get('/getuserdata/:company', public_controller_1.default.getClientData);
 publicRoutes.post('/contact', public_controller_1.default.postContact);
+// Para poder usarlo desde index.ts tengo que exportar publicRoutes
 exports.default = publicRoutes;

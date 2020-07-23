@@ -11,7 +11,7 @@ function createSkill(req: Request, res: Response) {
 
     var skill = new Skill({
         id_company: body.id_company,
-        id_skill: body.id_skill,
+        cd_skill: body.cd_skill,
         tx_skill: body.tx_skill
     });
 
@@ -32,7 +32,7 @@ function createSkill(req: Request, res: Response) {
 
 function readSkills(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
-    console.log(idCompany);
+
     Skill.find({ id_company: idCompany }).then((skills) => {
         res.status(200).json({
             ok: true,

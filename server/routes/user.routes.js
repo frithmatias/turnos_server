@@ -15,5 +15,4 @@ userRoutes.post('/google', user_controller_1.default.loginGoogle);
 userRoutes.post('/login', user_controller_1.default.loginUser);
 userRoutes.post('/register', user_controller_1.default.registerUser);
 userRoutes.post('/update', auth_1.default.verificaToken, user_controller_1.default.updateUser);
-// Para poder usarlo desde index.ts tengo que exportar userRoutes
 exports.default = userRoutes;

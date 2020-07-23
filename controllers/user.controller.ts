@@ -20,7 +20,7 @@ const oauthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 function registerUser(req: any, res: Response) {
 
   var body = req.body;
-  console.log(body)
+
   // Save Company
 
   var company = new Company({
@@ -63,7 +63,7 @@ function registerUser(req: any, res: Response) {
     });
 
   }).catch((err) => {
-    console.log(err)
+
     return res.status(400).json({
       ok: false,
       msg: "Error al guardar la empresa.",
@@ -76,16 +76,9 @@ function registerUser(req: any, res: Response) {
 
 function readUser(req: Request, res: Response) {
 
-  User.findById(req.params.id, (err, usuario) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        msg: "Error al buscar el usuario",
-        errors: err
-      });
-    }
-
-    if (!usuario) {
+  User.findById(req.params.id).populate('id_company').then(usuarioDB => {
+    console.log('usuario',usuarioDB);
+    if (!usuarioDB) {
       return res.status(400).json({
         ok: false,
         msg: "No existe un usuario con el id solicitado",
@@ -95,10 +88,19 @@ function readUser(req: Request, res: Response) {
 
     res.status(200).json({
       ok: true,
-      usuario
+      msg: 'Usuario encontrado correctamente',
+      usuario: usuarioDB
     });
+  }).catch(()=> {
 
-  });
+    return res.status(500).json({
+      ok: false,
+      msg: "Error al buscar el usuario",
+      usuario: null
+    });
+  
+  })
+
 }
 
 function updateUser(req: Request, res: Response) {
@@ -356,7 +358,6 @@ function loginUser(req: Request, res: Response) {
 function obtenerMenu(id_role: string) {
   var menu = [];
 
-  console.log(id_role)
   if ((id_role === "ASSISTANT_ROLE") || (id_role === "USER_ROLE")) {
     menu.push({
       titulo: "Asistente",

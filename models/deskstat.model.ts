@@ -11,7 +11,7 @@ const deskStatSchema = new Schema({
 interface DeskStat extends Document { 
     id_company?: string;
     id_desktop?: string;
-    id_assistant?: string;
+    id_assistant?: string | null;
     fc_start?: number;
     fc_end?: number;
 }

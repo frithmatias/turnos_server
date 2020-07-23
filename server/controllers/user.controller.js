@@ -25,7 +25,6 @@ const oauthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 // ========================================================
 function registerUser(req, res) {
     var body = req.body;
-    console.log(body);
     // Save Company
     var company = new company_model_1.Company({
         tx_company_name: body.company.tx_company_name,
@@ -61,7 +60,6 @@ function registerUser(req, res) {
             });
         });
     }).catch((err) => {
-        console.log(err);
         return res.status(400).json({
             ok: false,
             msg: "Error al guardar la empresa.",
@@ -70,15 +68,9 @@ function registerUser(req, res) {
     });
 }
 function readUser(req, res) {
-    user_model_1.User.findById(req.params.id, (err, usuario) => {
-        if (err) {
-            return res.status(500).json({
-                ok: false,
-                msg: "Error al buscar el usuario",
-                errors: err
-            });
-        }
-        if (!usuario) {
+    user_model_1.User.findById(req.params.id).populate('id_company').then(usuarioDB => {
+        console.log('usuario', usuarioDB);
+        if (!usuarioDB) {
             return res.status(400).json({
                 ok: false,
                 msg: "No existe un usuario con el id solicitado",
@@ -87,7 +79,14 @@ function readUser(req, res) {
         }
         res.status(200).json({
             ok: true,
-            usuario
+            msg: 'Usuario encontrado correctamente',
+            usuario: usuarioDB
+        });
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: "Error al buscar el usuario",
+            usuario: null
         });
     });
 }
@@ -308,7 +307,6 @@ function loginUser(req, res) {
 }
 function obtenerMenu(id_role) {
     var menu = [];
-    console.log(id_role);
     if ((id_role === "ASSISTANT_ROLE") || (id_role === "USER_ROLE")) {
         menu.push({
             titulo: "Asistente",
