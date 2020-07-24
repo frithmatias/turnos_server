@@ -363,9 +363,9 @@ function obtenerMenu(id_role: string) {
       titulo: "Asistente",
       icon: "mdi mdi-settings",
       submenu: [
-        { titulo: "Home", url: "/asistente/home", icon: "home" },
+        { titulo: "Home", url: "/assistant/home", icon: "home" },
         { titulo: "Dashboard", url: "/asistente/dashboard", icon: "dashboard" },
-        { titulo: "Escritorio", url: "/asistente/escritorio", icon: "desktop_windows" },
+        { titulo: "Escritorio", url: "/asistente/desktop", icon: "desktop_windows" },
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
