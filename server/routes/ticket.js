@@ -18,7 +18,7 @@ router.get('/nuevoticket/:id_socket', (req, res) => {
         ticket: exports.ticket.getNewTicket(id_socket)
     });
     const server = server_1.default.instance;
-    const numTickets = exports.ticket.getPendingTickets();
+    const numTickets = exports.ticket.readPendingTickets();
     //todo: crear dos salas. Una para escritorios y otra para clientes. Este mensaje es dirigido a escritorios.
     server.io.emit('nuevo-turno', numTickets);
 });
@@ -28,7 +28,7 @@ router.post('/atenderticket', (req, res) => {
     res.json(exports.ticket.atenderTicket(idDesk, idDeskSocket));
     // creo una misma instancia corriendo en toda la app con el patrón singleton
     const server = server_1.default.instance;
-    const numTickets = exports.ticket.getPendingTickets();
+    const numTickets = exports.ticket.readPendingTickets();
     server.io.emit('actualizar-pantalla'); // para clientes
     server.io.emit('nuevo-turno', numTickets); // para asistentes
 });
@@ -38,7 +38,7 @@ router.post('/devolverticket', (req, res) => {
     // const socketCli = ticketToRollback.ticket?.id_socket;
     res.json(exports.ticket.devolverTicket(idDesk));
     const server = server_1.default.instance;
-    const numTickets = exports.ticket.getPendingTickets();
+    const numTickets = exports.ticket.readPendingTickets();
     server.io.emit('nuevo-turno', numTickets); // para asistentes
     server.io.emit('actualizar-pantalla'); // para clientes
 });

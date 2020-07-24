@@ -7,6 +7,7 @@ const server_1 = __importDefault(require("../classes/server"));
 const ticket_model_1 = require("../models/ticket.model");
 const status_model_1 = require("../models/status.model");
 const user_model_1 = require("../models/user.model");
+const server = server_1.default.instance;
 function createTicket(req, res) {
     // ! con findOneAndUpdate en lugar de findOne, ++, y luego save() puedo incrementar id_ticket 
     // ! antes de que otro usuario pueda solicitar un ticket en ese instante y obtener el mismo número.
@@ -34,7 +35,7 @@ function createTicket(req, res) {
             newTicketsStatus.save().catch(() => {
                 return res.status(400).json({
                     ok: false,
-                    mensaje: "El nuevo status no se pudo guardar."
+                    msg: "El nuevo status no se pudo guardar."
                 });
             });
             idTicket = newTicketsStatus.id_ticket;
@@ -57,35 +58,34 @@ function createTicket(req, res) {
         });
         ticketDB.save().then((ticketSaved) => {
             const server = server_1.default.instance;
-            server.io.to(idSocket).emit('mensaje-privado', { mensaje: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
-            getPendingTickets(idCompany).then(resp => {
+            server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
+            readPendingTickets(idCompany).then(resp => {
                 if (resp.ok) {
                     server.io.emit('nuevo-turno', resp.num);
                 }
             });
             res.status(201).json({
                 ok: true,
-                mensaje: "Ticket guardado correctamente.",
+                msg: "Ticket guardado correctamente.",
                 ticket: ticketSaved
             });
         }).catch(() => {
             return res.status(400).json({
                 ok: false,
-                mensaje: "El ticket no se pudo guardar."
+                msg: "El ticket no se pudo guardar."
             });
         });
     }).catch(() => {
         return res.status(400).json({
             ok: false,
-            mensaje: "Error al procesar el status de los tickets para la empresa."
+            msg: "Error al procesar el status de los tickets para la empresa."
         });
     });
 }
 ;
 function readPendingTicket(req, res) {
-    var idCompany = req.params.idCompany;
     var idDesk = req.params.idDesk;
-    ticket_model_1.Ticket.findOne({ id_company: idCompany, id_desk: idDesk }).then(ticketPending => {
+    ticket_model_1.Ticket.findOne({ id_desk: idDesk, tm_end: null }).then(ticketPending => {
         if (!ticketPending) {
             return res.status(200).json({
                 ok: true,
@@ -105,9 +105,24 @@ function readPendingTicket(req, res) {
     });
 }
 ;
+function readPendingTickets(idCompany) {
+    return ticket_model_1.Ticket.find({ id_company: idCompany, tm_end: null })
+        .then((resp) => {
+        return {
+            ok: true,
+            num: resp.length
+        };
+    })
+        .catch(() => {
+        return {
+            ok: false,
+            num: 0
+        };
+    });
+}
 function takeTicket(req, res) {
     const server = server_1.default.instance;
-    const { idDesk, idSocketDesk, idAssistant } = req.body;
+    const { cdDesk, idDesk, idSocketDesk, idAssistant } = req.body;
     user_model_1.User.findById(idAssistant).then(assistantDB => {
         if (!assistantDB) {
             return res.status(400).json({
@@ -151,8 +166,10 @@ function takeTicket(req, res) {
                     ticketDB.tm_att = +new Date().getTime();
                     ticketDB.id_desk = idDesk;
                     ticketDB.id_socket_desk = idSocketDesk;
+                    ticketDB.id_assistant = idAssistant;
+                    ticketDB.cd_desk = cdDesk;
                     ticketDB.save().then(ticketSaved => {
-                        server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { mensaje: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
+                        server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${idDesk} por ${assistantDB.tx_name} ` });
                         //server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
                         server.io.emit('actualizar-pantalla'); // para clientes
                         return res.status(200).json({
@@ -205,7 +222,7 @@ function rejectTicket(req, res) {
     // const { idCompany, idDesk } = req.body;
     // todo: poner a null tm_att
     // const server = Server.instance;
-    // const numTickets = this.getPendingTickets(idCompany);
+    // const numTickets = this.readPendingTickets(idCompany);
     // server.io.emit('nuevo-turno', numTickets); // para asistentes
     // server.io.emit('actualizar-pantalla'); // para clientes
 }
@@ -246,58 +263,53 @@ function getTickets(req, res) {
 ;
 function updateSocket(req, res) {
     const idTicket = req.body.idTicket;
+    const oldSocket = req.body.oldSocket;
     const newSocket = req.body.newSocket;
     ticket_model_1.Ticket.findById(idTicket).then((ticketDB) => {
         if (!ticketDB) {
             return res.status(400).json({
                 ok: false,
-                mensaje: "No existe el ticket con el socket a actualizar."
+                msg: "No existe el ticket con el socket a actualizar."
             });
         }
-        ticketDB.id_socket = newSocket;
+        let requestUpdateTo;
+        switch (oldSocket) {
+            case ticketDB.id_socket: // actualizo el socket del cliente
+                ticketDB.id_socket = newSocket;
+                requestUpdateTo = ticketDB.id_socket_desk;
+                break;
+            case ticketDB.id_socket_desk: // actualizo el socket del asistente
+                ticketDB.id_socket_desk = newSocket;
+                requestUpdateTo = ticketDB.id_socket;
+                break;
+            default:
+                console.log('No se encontro ticket para actualizar');
+                break;
+        }
         ticketDB.save().then((ticketUpdated) => {
+            // antes de enviar el ticket actualizado al solicitante, tengo que 
+            // avisarle a la otra parte, que tiene que actualizar el ticket. 
+            server.io.to(requestUpdateTo).emit('ticket-updated', {
+                ok: true,
+                msg: 'El socket del destino ha cambiado',
+                ticket: ticketUpdated
+            });
             return res.status(200).json({
                 ok: true,
-                mensaje: "El socket del ticket fue actualizado correctamente.",
+                msg: "El socket del ticket fue actualizado correctamente.",
                 ticket: ticketUpdated
             });
         }).catch(() => {
             return res.status(400).json({
                 ok: false,
-                mensaje: "Error al actualizar el socket del ticket."
+                msg: "Error al actualizar el socket del ticket."
             });
         });
     }).catch(() => {
         return res.status(400).json({
             ok: false,
-            mensaje: "Error al obtener el socket del ticket."
+            msg: "Error al obtener el socket del ticket."
         });
-    });
-}
-// helpers
-function getMyDestination(cliente) {
-    return ticket_model_1.Ticket.findOne({ $or: [{ id_socket: cliente.id, tm_end: null }, { id_socket_desk: cliente.id, tm_end: null }] })
-        .then((ticketDB) => {
-        if (!ticketDB)
-            return null;
-        return ticketDB;
-    }).catch(() => {
-        return null;
-    });
-}
-function getPendingTickets(idCompany) {
-    return ticket_model_1.Ticket.find({ id_company: idCompany, tm_end: null })
-        .then((resp) => {
-        return {
-            ok: true,
-            num: resp.length
-        };
-    })
-        .catch(() => {
-        return {
-            ok: false,
-            num: 0
-        };
     });
 }
 module.exports = {
@@ -307,8 +319,7 @@ module.exports = {
     rejectTicket,
     endTicket,
     readPendingTicket,
+    readPendingTickets,
     getTickets,
     updateSocket,
-    getMyDestination,
-    getPendingTickets
 };

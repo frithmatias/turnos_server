@@ -7,7 +7,7 @@ const desktopSchema = new Schema({
     
 },{ collection: "desktops" })
 
-interface Desktop extends Document { 
+export interface Desktop extends Document { 
     id_company?: string;
     cd_desktop?: string;
     id_assistant?: string | null;

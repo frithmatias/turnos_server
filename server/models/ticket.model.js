@@ -6,6 +6,8 @@ const ticketsSchema = new mongoose_1.Schema({
     id_socket: { type: String, required: [true, 'El socket del cliente en el ticket es necesario'] },
     id_socket_desk: { type: String, required: false },
     id_desk: { type: String, required: false },
+    cd_desk: { type: String, required: false },
+    cd_assistant: { type: String, required: false },
     id_company: { type: String, required: [true, 'El id de la empresa es necesario'] },
     id_skill: { type: String, required: [true, 'El id del skill es necesario'] },
     cd_skill: { type: String, required: [true, 'El abreviado del skill es necesario'] },

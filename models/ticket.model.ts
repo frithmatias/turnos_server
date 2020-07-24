@@ -5,6 +5,8 @@ const ticketsSchema = new Schema({
     id_socket: {type: String, required: [true, 'El socket del cliente en el ticket es necesario']},
     id_socket_desk: {type: String, required: false},
     id_desk: {type: String, required: false},
+    cd_desk: {type: String, required: false},
+    cd_assistant: {type: String, required: false},
     id_company: {type: String, required: [true, 'El id de la empresa es necesario']},
     id_skill: {type: String, required: [true, 'El id del skill es necesario']},
     cd_skill: {type: String, required: [true, 'El abreviado del skill es necesario']},
@@ -13,11 +15,13 @@ const ticketsSchema = new Schema({
     tm_end: { type: Number, required: false },
 },{ collection: "tickets" })
 
-interface Ticket extends Document {
+export interface Ticket extends Document {
     id_ticket: number;
     id_socket: string;
-    id_socket_desk: string | null;
+    id_socket_desk: string;
     id_desk: string | null;
+    cd_desk: string | null;
+    id_assistant: string | null;
     id_company: string;
     id_skill: string;
     cd_skill: string;

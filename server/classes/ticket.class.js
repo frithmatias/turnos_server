@@ -121,7 +121,7 @@ class Tickets {
     getTickets() {
         return this.tickets;
     }
-    getPendingTickets() {
+    readPendingTickets() {
         return this.tickets.filter(ticket => ticket.tm_att === null).length;
     }
     getTicketsFilter() {
@@ -134,7 +134,7 @@ class Tickets {
     }
     getDesktopStatus(id_desk) {
         let pendingTicket = this.tickets.filter(ticket => ticket.id_desk == id_desk && ticket.tm_att !== null && ticket.tm_end === null);
-        let pendingTickets = this.getPendingTickets();
+        let pendingTickets = this.readPendingTickets();
         if (pendingTicket[0]) {
             let resp = {
                 ok: true,
