@@ -12,4 +12,5 @@ const company_controller_1 = __importDefault(require("../controllers/company.con
 const companyRoutes = express_1.Router();
 companyRoutes.post('/updatecompany', auth_1.default.verificaToken, company_controller_1.default.updateCompany);
 companyRoutes.get('/readcompany/:idCompany', company_controller_1.default.readCompany);
+companyRoutes.get('/findcompany/:pattern', company_controller_1.default.findCompany);
 exports.default = companyRoutes;

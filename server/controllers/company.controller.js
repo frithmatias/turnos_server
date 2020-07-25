@@ -26,6 +26,30 @@ function readCompany(req, res) {
         });
     });
 }
+function findCompany(req, res) {
+    var pattern = String(req.params.pattern);
+    var regex = new RegExp(pattern, 'i');
+    company_model_1.Company.find({ tx_company_name: regex }).then(companiesDB => {
+        if (!companiesDB) {
+            return res.status(200).json({
+                ok: false,
+                msg: "No existe la empresa",
+                companies: null
+            });
+        }
+        res.status(200).json({
+            ok: true,
+            msg: 'Empresa obtenida correctamente',
+            companies: companiesDB
+        });
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: "Error al buscar el usuario",
+            companies: null
+        });
+    });
+}
 function updateCompany(req, res) {
     var body = req.body;
     var id = req.params.id;
@@ -66,5 +90,6 @@ function updateCompany(req, res) {
 }
 module.exports = {
     readCompany,
+    findCompany,
     updateCompany,
 };

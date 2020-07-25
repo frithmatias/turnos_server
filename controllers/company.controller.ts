@@ -33,6 +33,36 @@ function readCompany(req: Request, res: Response) {
   })
 }
 
+function findCompany(req: Request, res: Response) {
+
+  var pattern = String(req.params.pattern);
+  var regex = new RegExp( pattern, 'i');
+
+  Company.find({ tx_company_name: regex }).then(companiesDB => {
+
+    if (!companiesDB) {
+      return res.status(200).json({
+        ok: false,
+        msg: "No existe la empresa",
+        companies: null
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      msg: 'Empresa obtenida correctamente',
+      companies: companiesDB
+    });
+
+  }).catch(() => {
+    return res.status(500).json({
+      ok: false,
+      msg: "Error al buscar el usuario",
+      companies: null
+    });
+  })
+}
+
 function updateCompany(req: Request, res: Response) {
   var body = req.body;
   var id = req.params.id;
@@ -80,6 +110,7 @@ function updateCompany(req: Request, res: Response) {
 
 export = {
   readCompany,
+  findCompany,
   updateCompany,
 }
 

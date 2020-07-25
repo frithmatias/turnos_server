@@ -212,7 +212,7 @@ function takeTicket(req: Request, res: Response) {
 
 						ticketDB.save().then(ticketSaved => {
 
-							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${idDesk} por ${assistantDB.tx_name} ` });
+							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${cdDesk} por ${assistantDB.tx_name} ` });
 							//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
 							server.io.emit('actualizar-pantalla'); // para clientes
 
