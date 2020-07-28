@@ -164,48 +164,54 @@ function deleteUser(req, res) {
         });
     });
 }
-function checkCompanyExists(req, res) {
-    let pattern = req.body.pattern;
-    console.log(req.body);
-    company_model_1.Company.findOne({ tx_public_name: pattern }).then(companyDB => {
-        if (!companyDB) {
-            return res.status(200).json({
-                ok: true,
-                msg: 'No existe la empresa'
+function checkExists(req, res) {
+    let { control, pattern } = req.body;
+    switch (control) {
+        case 'company':
+            company_model_1.Company.find({ tx_public_name: pattern }).then(companyDB => {
+                if (!companyDB) {
+                    return res.status(200).json({
+                        ok: true,
+                        msg: 'No existe la empresa'
+                    });
+                }
+                return res.status(200).json({
+                    ok: false,
+                    msg: 'La empresa ya existe.'
+                });
+            }).catch(() => {
+                return res.status(500).json({
+                    ok: false,
+                    msg: 'Error al consultar si existe la empresa'
+                });
             });
-        }
-        return res.status(200).json({
-            ok: false,
-            msg: 'La empresa ya existe.',
-            company: companyDB
-        });
-    }).catch(() => {
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error al consultar si existe la empresa'
-        });
-    });
-}
-function checkEmailExists(req, res) {
-    let pattern = req.body.pattern;
-    console.log(pattern);
-    user_model_1.User.findOne({ tx_email: pattern }).then(userDB => {
-        if (!userDB) {
-            return res.status(200).json({
-                ok: true,
-                msg: 'No existe el email'
+            break;
+        case 'email':
+            user_model_1.User.find({ tx_email: pattern }).then(userDB => {
+                if (!userDB) {
+                    return res.status(200).json({
+                        ok: true,
+                        msg: 'No existe el email'
+                    });
+                }
+                return res.status(200).json({
+                    ok: false,
+                    msg: 'El email ya existe.'
+                });
+            }).catch(() => {
+                return res.status(500).json({
+                    ok: false,
+                    msg: 'Error al consultar si existe el email'
+                });
             });
-        }
-        return res.status(200).json({
-            ok: false,
-            msg: 'El email ya existe.'
-        });
-    }).catch(() => {
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error al consultar si existe el email'
-        });
-    });
+            break;
+        default:
+            return res.status(400).json({
+                ok: false,
+                msg: 'No ingreso un control admitido'
+            });
+            break;
+    }
 }
 // ========================================================
 // Session methods
@@ -410,8 +416,7 @@ module.exports = {
     readUser,
     updateUser,
     deleteUser,
-    checkCompanyExists,
-    checkEmailExists,
+    checkExists,
     updateToken,
     loginGoogle,
     loginUser,

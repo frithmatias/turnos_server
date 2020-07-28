@@ -5,14 +5,10 @@ import Server from '../classes/server';
 import { Ticket } from '../models/ticket.model';
 import { Status } from '../models/status.model';
 import { User } from '../models/user.model';
-import { Desktop } from '../models/desktop.model';
-
+ 
 const server = Server.instance;
 
 function createTicket(req: Request, res: Response) {
-
-	// ! con findOneAndUpdate en lugar de findOne, ++, y luego save() puedo incrementar id_ticket 
-	// ! antes de que otro usuario pueda solicitar un ticket en ese instante y obtener el mismo número.
 
 	const idDay = + new Date().getDate();
 	const idMonth = + new Date().getMonth() + 1;
@@ -21,7 +17,6 @@ function createTicket(req: Request, res: Response) {
 	var idTicket: number;
 
 	Status.findOneAndUpdate({
-		id_company: idCompany,
 		id_skill: idSkill,
 		id_year: idYear,
 		id_month: idMonth,
@@ -31,7 +26,6 @@ function createTicket(req: Request, res: Response) {
 		if (!statusUpdated) {
 
 			let newTicketsStatus = new Status({
-				id_company: idCompany,
 				id_skill: idSkill,
 				id_year: idYear,
 				id_month: idMonth,
@@ -70,11 +64,11 @@ function createTicket(req: Request, res: Response) {
 		ticketDB.save().then((ticketSaved) => {
 
 			const server = Server.instance;
-			server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
+			server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, puede realizar culquier consulta por aquí. Gracias por esperar.' });
 
 			getCountPending(idCompany).then(resp => {
 				if (resp.ok) {
-					server.io.emit('nuevo-turno', resp.num);
+					server.io.to(idCompany).emit('nuevo-turno', resp.num);
 				}
 			})
 
@@ -146,7 +140,7 @@ function takeTicket(req: Request, res: Response) {
 						ticketDB.save().then(() => {
 							// actualiza sólo la pantalla del cliente con el turno finalizado
 							// server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
-							server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
+							server.io.to(assistantDB.id_company).emit('actualizar-pantalla');
 
 						}).catch(() => {
 							return res.status(500).json({
@@ -186,7 +180,7 @@ function takeTicket(req: Request, res: Response) {
 
 							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${cdDesk} por ${assistantDB.tx_name} ` });
 							//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
-							server.io.emit('actualizar-pantalla'); // para clientes
+							server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
 
 							return res.status(200).json({
 								ok: true,
@@ -320,7 +314,6 @@ function updateSocket(req: Request, res: Response) {
 				requestUpdateTo = ticketDB.id_socket;
 				break;
 			default:
-				console.log('No se encontro ticket para actualizar')
 				break;
 		}
 

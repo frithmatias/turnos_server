@@ -6,6 +6,7 @@ import environment from '../global/environment';
 
 import { User } from '../models/user.model';
 import { Company } from '../models/company.model';
+import { Error } from '../models/error.model';
 
 // Google Login
 var GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
@@ -34,7 +35,7 @@ function registerUser(req: any, res: Response) {
   });
 
   company.save().then((companySaved) => {
-    
+
     // Save User
     var user = new User({
       tx_name: body.user.tx_name,
@@ -44,22 +45,42 @@ function registerUser(req: any, res: Response) {
       bl_google: false,
       fc_createdat: new Date()
     });
-  
+
     user.save().then((userSaved) => {
-      
+
       res.status(201).json({
         ok: true,
         msg: "Usuario guardado correctamente.",
-        user: userSaved, 
-        company: companySaved 
+        user: userSaved,
+        company: companySaved
       });
 
     }).catch((err) => {
-      return res.status(400).json({
-        ok: false,
-        msg: "Error al guardar el usuario.",
-        errors: err
+
+      companySaved.remove().then(companyRemoved => {
+
+        return res.status(400).json({
+          ok: false,
+          msg: "Error al guardar el usuario o el usuario existe."
+        });
+
+      }).catch(() => {
+
+        let error = new Error({
+          id_error: companySaved._id,
+          tx_error: 'company remove'
+        })
+
+        error.save();
+
+        return res.status(500).json({
+          ok: false,
+          msg: "No se pudo eliminar la empresa. El error quedó registrado.",
+          errors: err
+        });
+
       });
+
     });
 
   }).catch((err) => {
@@ -77,7 +98,7 @@ function registerUser(req: any, res: Response) {
 function readUser(req: Request, res: Response) {
 
   User.findById(req.params.id).populate('id_company').then(usuarioDB => {
-    console.log('usuario',usuarioDB);
+
     if (!usuarioDB) {
       return res.status(400).json({
         ok: false,
@@ -91,14 +112,14 @@ function readUser(req: Request, res: Response) {
       msg: 'Usuario encontrado correctamente',
       usuario: usuarioDB
     });
-  }).catch(()=> {
+  }).catch(() => {
 
     return res.status(500).json({
       ok: false,
       msg: "Error al buscar el usuario",
       usuario: null
     });
-  
+
   })
 
 }
@@ -174,6 +195,57 @@ function deleteUser(req: Request, res: Response) {
       usuario: usuarioBorrado
     });
   });
+}
+
+function checkCompanyExists(req: Request, res: Response) {
+
+  let pattern = req.body.pattern;
+  console.log(req.body)
+  Company.findOne({ tx_public_name: pattern }).then(companyDB => {
+
+    if (!companyDB) {
+      return res.status(200).json({
+        ok: true,
+        msg: 'No existe la empresa'
+      })
+    }
+
+    return res.status(200).json({
+      ok: false,
+      msg: 'La empresa ya existe.',
+      company: companyDB
+    })
+
+  }).catch(() => {
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al consultar si existe la empresa'
+    })
+  })
+}
+
+function checkEmailExists(req: Request, res: Response) {
+
+  let pattern = req.body.pattern;
+  console.log(pattern);
+  User.findOne({ tx_email: pattern }).then(userDB => {
+    if (!userDB) {
+      return res.status(200).json({
+        ok: true,
+        msg: 'No existe el email'
+      })
+    }
+    return res.status(200).json({
+      ok: false,
+      msg: 'El email ya existe.'
+    })
+  }).catch(() => {
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al consultar si existe el email'
+    })
+  })
+
 }
 
 // ========================================================
@@ -303,57 +375,57 @@ function loginUser(req: Request, res: Response) {
 
   var body = req.body;
   User.findOne({ tx_email: body.tx_email })
-  .populate({ path: 'id_company' })
-  .populate({ path: 'id_skills', select: 'cd_skill tx_skill' })
-  .then( usuarioDB => {
+    .populate({ path: 'id_company' })
+    .populate({ path: 'id_skills', select: 'cd_skill tx_skill' })
+    .then(usuarioDB => {
 
-    if (!usuarioDB) {
-      return res.status(400).json({
-        ok: false,
-        msg: "Credenciales incorrectas1"
-      });
-    }
-    console.log(usuarioDB)
-    if (!bcrypt.compareSync(body.tx_password, usuarioDB.tx_password)) {
-      return res.status(400).json({
-        ok: false,
-        msg: "Credenciales incorrectas2"
-      });
-    }
+      if (!usuarioDB) {
+        return res.status(400).json({
+          ok: false,
+          msg: "Credenciales incorrectas1"
+        });
+      }
 
-    // Si llego hasta acá, el usuario y la contraseña son correctas, creo el token
-    var token = Token.getJwtToken({ usuario: usuarioDB });
-    usuarioDB.fc_lastlogin = new Date();
+      if (!bcrypt.compareSync(body.tx_password, usuarioDB.tx_password)) {
+        return res.status(400).json({
+          ok: false,
+          msg: "Credenciales incorrectas2"
+        });
+      }
 
-    usuarioDB.save().then(() => {
+      // Si llego hasta acá, el usuario y la contraseña son correctas, creo el token
+      var token = Token.getJwtToken({ usuario: usuarioDB });
+      usuarioDB.fc_lastlogin = new Date();
 
-      usuarioDB.tx_password = ":)";
-      res.status(200).json({
-        ok: true,
-        msg: "Login post recibido.",
-        token: token,
-        body: body,
-        id: usuarioDB._id,
-        usuario: usuarioDB,
-        menu: obtenerMenu(usuarioDB.id_role)
-      });
+      usuarioDB.save().then(() => {
+
+        usuarioDB.tx_password = ":)";
+        res.status(200).json({
+          ok: true,
+          msg: "Login post recibido.",
+          token: token,
+          body: body,
+          id: usuarioDB._id,
+          usuario: usuarioDB,
+          menu: obtenerMenu(usuarioDB.id_role)
+        });
+
+      }).catch((err) => {
+        return res.status(500).json({
+          ok: false,
+          msg: "Error al actualizar la fecha de login",
+          errors: err
+        });
+      })
 
     }).catch((err) => {
       return res.status(500).json({
         ok: false,
-        msg: "Error al actualizar la fecha de login",
+        msg: "Error al buscar un usuario",
         errors: err
       });
+
     })
-
-  }).catch ((err) => {
-  return res.status(500).json({
-    ok: false,
-    msg: "Error al buscar un usuario",
-    errors: err
-  });
-
-})
 
 
 }
@@ -413,6 +485,8 @@ export = {
   readUser,
   updateUser,
   deleteUser,
+  checkCompanyExists,
+  checkEmailExists,
   updateToken,
   loginGoogle,
   loginUser,

@@ -14,5 +14,8 @@ userRoutes.post('/google', UserController.loginGoogle);
 userRoutes.post('/login', UserController.loginUser);
 userRoutes.post('/register', UserController.registerUser);
 userRoutes.post('/update', mdAuth.verificaToken, UserController.updateUser);
+userRoutes.post('/checkcompanyexists', UserController.checkCompanyExists);
+userRoutes.post('/checkemailexists', UserController.checkEmailExists);
+
 
 export default userRoutes;

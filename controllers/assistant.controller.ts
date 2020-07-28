@@ -38,7 +38,9 @@ function createAssistant(req: Request, res: Response) {
 
 function readAssistants(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
+
     User.find({ id_company: idCompany }).then((assistants) => {
+
         res.status(200).json({
             ok: true,
             msg: 'Usuarios obtenidos correctamente',
