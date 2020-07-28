@@ -302,7 +302,10 @@ async function loginGoogle(req: Request, res: Response) {
 function loginUser(req: Request, res: Response) {
 
   var body = req.body;
-  User.findOne({ tx_email: body.tx_email }).then( usuarioDB => {
+  User.findOne({ tx_email: body.tx_email })
+  .populate({ path: 'id_company' })
+  .populate({ path: 'id_skills', select: 'cd_skill tx_skill' })
+  .then( usuarioDB => {
 
     if (!usuarioDB) {
       return res.status(400).json({
@@ -310,7 +313,7 @@ function loginUser(req: Request, res: Response) {
         msg: "Credenciales incorrectas1"
       });
     }
-
+    console.log(usuarioDB)
     if (!bcrypt.compareSync(body.tx_password, usuarioDB.tx_password)) {
       return res.status(400).json({
         ok: false,

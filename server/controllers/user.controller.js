@@ -263,13 +263,17 @@ function loginGoogle(req, res) {
 }
 function loginUser(req, res) {
     var body = req.body;
-    user_model_1.User.findOne({ tx_email: body.tx_email }).then(usuarioDB => {
+    user_model_1.User.findOne({ tx_email: body.tx_email })
+        .populate({ path: 'id_company' })
+        .populate({ path: 'id_skills', select: 'cd_skill tx_skill' })
+        .then(usuarioDB => {
         if (!usuarioDB) {
             return res.status(400).json({
                 ok: false,
                 msg: "Credenciales incorrectas1"
             });
         }
+        console.log(usuarioDB);
         if (!bcrypt_1.default.compareSync(body.tx_password, usuarioDB.tx_password)) {
             return res.status(400).json({
                 ok: false,

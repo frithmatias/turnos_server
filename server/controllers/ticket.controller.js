@@ -59,7 +59,7 @@ function createTicket(req, res) {
         ticketDB.save().then((ticketSaved) => {
             const server = server_1.default.instance;
             server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
-            readPendingTickets(idCompany).then(resp => {
+            getCountPending(idCompany).then(resp => {
                 if (resp.ok) {
                     server.io.emit('nuevo-turno', resp.num);
                 }
@@ -83,29 +83,7 @@ function createTicket(req, res) {
     });
 }
 ;
-function readPendingTicket(req, res) {
-    var idDesk = req.params.idDesk;
-    ticket_model_1.Ticket.findOne({ id_desk: idDesk, tm_end: null }).then(ticketPending => {
-        if (!ticketPending) {
-            return res.status(200).json({
-                ok: true,
-                msg: "No existe ticket pendiente de resolución."
-            });
-        }
-        return res.status(200).json({
-            ok: true,
-            msg: "Existe un ticket pendiente de resolución.",
-            ticket: ticketPending
-        });
-    }).catch((err) => {
-        return res.status(400).json({
-            ok: false,
-            msg: "Error al buscar ticket pendiente."
-        });
-    });
-}
-;
-function readPendingTickets(idCompany) {
+function getCountPending(idCompany) {
     return ticket_model_1.Ticket.find({ id_company: idCompany, tm_end: null })
         .then((resp) => {
         return {
@@ -138,6 +116,7 @@ function takeTicket(req, res) {
                     ticketDB.tm_end = +new Date().getTime();
                     ticketDB.save().then(() => {
                         // actualiza sólo la pantalla del cliente con el turno finalizado
+                        // server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
                         server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
                     }).catch(() => {
                         return res.status(500).json({
@@ -318,8 +297,6 @@ module.exports = {
     takeTicket,
     rejectTicket,
     endTicket,
-    readPendingTicket,
-    readPendingTickets,
     getTickets,
     updateSocket,
 };

@@ -18,7 +18,6 @@ function createTicket(req: Request, res: Response) {
 	const idMonth = + new Date().getMonth() + 1;
 	const idYear = + new Date().getFullYear();
 	const { idCompany, idSkill, cdSkill, idSocket } = req.body;
-
 	var idTicket: number;
 
 	Status.findOneAndUpdate({
@@ -73,7 +72,7 @@ function createTicket(req: Request, res: Response) {
 			const server = Server.instance;
 			server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, estamos acá para cualquier consulta. Gracias por esperar.' });
 
-			readPendingTickets(idCompany).then(resp => {
+			getCountPending(idCompany).then(resp => {
 				if (resp.ok) {
 					server.io.emit('nuevo-turno', resp.num);
 				}
@@ -105,36 +104,7 @@ function createTicket(req: Request, res: Response) {
 
 };
 
-function readPendingTicket(req: Request, res: Response) {
-
-	var idDesk = req.params.idDesk;
-
-
-
-	Ticket.findOne({ id_desk: idDesk, tm_end: null }).then(ticketPending => {
-
-		if (!ticketPending) {
-			return res.status(200).json({
-				ok: true,
-				msg: "No existe ticket pendiente de resolución."
-			});
-		}
-
-		return res.status(200).json({
-			ok: true,
-			msg: "Existe un ticket pendiente de resolución.",
-			ticket: ticketPending
-		});
-
-	}).catch((err) => {
-		return res.status(400).json({
-			ok: false,
-			msg: "Error al buscar ticket pendiente."
-		});
-	});
-};
-
-function readPendingTickets(idCompany: string) {
+function getCountPending(idCompany: string) {
 	return Ticket.find({ id_company: idCompany, tm_end: null })
 		.then((resp) => {
 			return {
@@ -175,7 +145,9 @@ function takeTicket(req: Request, res: Response) {
 						ticketDB.tm_end = + new Date().getTime();
 						ticketDB.save().then(() => {
 							// actualiza sólo la pantalla del cliente con el turno finalizado
+							// server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
 							server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
+
 						}).catch(() => {
 							return res.status(500).json({
 								ok: false,
@@ -397,8 +369,6 @@ export = {
 	takeTicket,
 	rejectTicket,
 	endTicket,
-	readPendingTicket,
-	readPendingTickets,
 	getTickets,
 	updateSocket,
 }
