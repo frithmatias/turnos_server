@@ -18,7 +18,7 @@ const ticketsSchema = new Schema({
 export interface Ticket extends Document {
     id_ticket: number;
     id_socket: string;
-    id_socket_desk: string;
+    id_socket_desk: string | null;
     id_desk: string | null;
     cd_desk: string | null;
     id_assistant: string | null;

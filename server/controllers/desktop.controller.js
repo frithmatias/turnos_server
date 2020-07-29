@@ -58,14 +58,12 @@ function deleteDesktop(req, res) {
     });
 }
 function takeDesktop(req, res) {
-    let idCompany = req.body.idCompany;
     let idDesktop = req.body.idDesktop;
     let idAssistant = req.body.idAssistant;
     // actualizo el escritorio
-    desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_assistant: idAssistant }).then(desktopUpdated => {
+    desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_assistant: idAssistant }).then(desktopTaked => {
         // actualizo el estado del escritorio
         var desktop_session = new deskstat_model_1.DeskStat({
-            id_company: idCompany,
             id_desktop: idDesktop,
             id_assistant: idAssistant,
             fc_start: +new Date().getTime()
@@ -74,26 +72,26 @@ function takeDesktop(req, res) {
             return res.status(200).json({
                 ok: true,
                 msg: 'Se asigno el asistente al escritorio',
-                desktop: desktopUpdated
+                desktop: desktopTaked
             });
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al guardar el asistente para el escritorio',
+                msg: 'Error al guardar la sesion del escritorio',
                 desktop: null
             });
         });
     }).catch(() => {
-        return res.status(400).json({
+        return res.status(500).json({
             ok: false,
-            msg: 'No existen escritorios disponibles',
+            msg: 'Error al intentar tomar el escritorio',
             desktop: null
         });
     });
 }
 function releaseDesktop(req, res) {
-    let desktop = req.body;
-    desktop_model_1.Desktop.findByIdAndUpdate(desktop._id, { id_assistant: null }).then(desktopUpdated => {
+    let idDesktop = req.body.idDesktop;
+    desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_assistant: null }).then(desktopUpdated => {
         if (!desktopUpdated) {
             return res.status(400).json({
                 ok: false,
@@ -101,30 +99,23 @@ function releaseDesktop(req, res) {
                 desktop: null
             });
         }
-        else {
-            deskstat_model_1.DeskStat.findOneAndUpdate(
-            // find session
-            {
-                id_company: desktop.id_company,
-                id_desktop: desktop._id,
-                id_assistant: desktop.id_assistant
-            }, {
-                // update
-                id_assistant: null
-            }).then(desktopReleased => {
-                return res.status(200).json({
-                    ok: true,
-                    msg: 'Esctirorio finalizado correctamente',
-                    desktop: desktopReleased
-                });
-            }).catch(() => {
-                return res.status(400).json({
-                    ok: true,
-                    msg: 'No se pudo finalizar el escritorio',
-                    desktop: null
-                });
+        deskstat_model_1.DeskStat.findOneAndUpdate({
+            id_desktop: idDesktop,
+            id_assistant: desktopUpdated.id_assistant,
+            fc_end: null
+        }, { fc_end: +new Date().getTime() }).then(desktopReleased => {
+            return res.status(200).json({
+                ok: true,
+                msg: 'Esctirorio finalizado correctamente',
+                desktop: desktopReleased
             });
-        }
+        }).catch(() => {
+            return res.status(400).json({
+                ok: true,
+                msg: 'Error al guardar la sesion del escritorio',
+                desktop: null
+            });
+        });
     }).catch(() => {
         return res.status(500).json({
             ok: false,

@@ -193,23 +193,50 @@ function cancelTicket(req, res) {
         });
     });
 }
-function rejectTicket(req, res) {
-    // const { idCompany, idDesk } = req.body;
-    // todo: poner a null tm_att
-    // const server = Server.instance;
-    // const numTickets = this.readPendingTickets(idCompany);
-    // server.io.emit('nuevo-turno', numTickets); // para asistentes
-    // server.io.emit('actualizar-pantalla'); // para clientes
+function releaseTicket(req, res) {
+    const idTicket = req.body.idTicket;
+    ticket_model_1.Ticket.findByIdAndUpdate(idTicket, {
+        tm_att: null,
+        id_desk: null,
+        id_socket_desk: null,
+        id_assistant: null,
+        cd_desk: null
+    }).then(ticketReleased => {
+        if (ticketReleased === null || ticketReleased === void 0 ? void 0 : ticketReleased.id_company) {
+            server.io.to(ticketReleased.id_company).emit('actualizar-pantalla');
+        }
+        return res.status(200).json({
+            ok: true,
+            msg: 'Ticket soltado correctamente',
+            ticket: ticketReleased
+        });
+    }).catch(() => {
+        return res.status(400).json({
+            ok: false,
+            msg: 'No se pudo soltar el ticket',
+            ticket: null
+        });
+    });
 }
 ;
 function endTicket(req, res) {
-    // const { idDesk } = req.body;
-    // const ticketToEnd = getPendingTicket(idDesk);
-    // const socketCli = ticketToEnd.ticket?.id_socket;
-    // res.json(ticket.finalizarTicket(idDesk));
-    // const server = Server.instance;
-    // // se actualiza la pantalla SOLO del cliente con el turno finalizado
-    // if (socketCli) { server.io.to(socketCli).emit('actualizar-pantalla'); }
+    const idTicket = req.body.idTicket;
+    ticket_model_1.Ticket.findByIdAndUpdate(idTicket, { tm_end: +new Date().getTime() }).then(ticketEnded => {
+        if (ticketEnded === null || ticketEnded === void 0 ? void 0 : ticketEnded.id_company) {
+            server.io.to(ticketEnded.id_company).emit('actualizar-pantalla');
+        }
+        return res.status(200).json({
+            ok: true,
+            msg: 'Ticket finalizado correctamente',
+            ticket: ticketEnded
+        });
+    }).catch(() => {
+        return res.status(400).json({
+            ok: false,
+            msg: 'No se pudo finalizar el ticket',
+            ticket: null
+        });
+    });
 }
 ;
 function getTickets(req, res) {
@@ -251,7 +278,9 @@ function updateSocket(req, res) {
         switch (oldSocket) {
             case ticketDB.id_socket: // actualizo el socket del cliente
                 ticketDB.id_socket = newSocket;
-                requestUpdateTo = ticketDB.id_socket_desk;
+                if (ticketDB.id_socket_desk) {
+                    requestUpdateTo = ticketDB.id_socket_desk;
+                }
                 break;
             case ticketDB.id_socket_desk: // actualizo el socket del asistente
                 ticketDB.id_socket_desk = newSocket;
@@ -290,7 +319,7 @@ module.exports = {
     createTicket,
     cancelTicket,
     takeTicket,
-    rejectTicket,
+    releaseTicket,
     endTicket,
     getTickets,
     updateSocket,

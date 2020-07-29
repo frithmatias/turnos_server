@@ -5,7 +5,7 @@ import Server from '../classes/server';
 import { Ticket } from '../models/ticket.model';
 import { Status } from '../models/status.model';
 import { User } from '../models/user.model';
- 
+
 const server = Server.instance;
 
 function createTicket(req: Request, res: Response) {
@@ -115,109 +115,107 @@ function getCountPending(idCompany: string) {
 }
 
 function takeTicket(req: Request, res: Response) {
-	const server = Server.instance;
 
+	const server = Server.instance;
 	const { cdDesk, idDesk, idSocketDesk, idAssistant } = req.body;
 
+	User.findById(idAssistant).then(assistantDB => {
 
-		User.findById(idAssistant).then(assistantDB => {
+		if (!assistantDB) {
+			return res.status(400).json({
+				ok: false,
+				msg: 'No existe el asistente!',
+				assistant: null
+			});
+		}
 
-			if (!assistantDB) {
-				return res.status(400).json({
-					ok: false,
-					msg: 'No existe el asistente!',
-					assistant: null
-				});
-			}
+		if (assistantDB) {
 
-			if (assistantDB) {
+			// Cierro, Si existe, el ticket recientemente atendido por el escritorio.
+			Ticket.findOne({ id_company: assistantDB.id_company, id_desk: idDesk, tm_end: null }).then(ticketDB => {
 
-				// Cierro, Si existe, el ticket recientemente atendido por el escritorio.
-				Ticket.findOne({ id_company: assistantDB.id_company, id_desk: idDesk, tm_end: null }).then(ticketDB => {
-
-					if (ticketDB) {
-						ticketDB.tm_end = + new Date().getTime();
-						ticketDB.save().then(() => {
-							// actualiza sólo la pantalla del cliente con el turno finalizado
-							// server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
-							server.io.to(assistantDB.id_company).emit('actualizar-pantalla');
-
-						}).catch(() => {
-							return res.status(500).json({
-								ok: false,
-								msg: 'Ocurrio un error al cerrar el ticket anterior.',
-								ticket: ticketDB
-							})
-						})
-					}
-				})
-
-				// Busco un nuevo ticket para atender
-				Ticket.findOne({
-					id_company: assistantDB.id_company,
-					id_skill: { $in: assistantDB.id_skills },
-					id_desk: null,
-					tm_end: null
-				}).then(ticketDB => {
-
-					if (!ticketDB) {
-						return res.status(200).json({
+				if (ticketDB) {
+					ticketDB.tm_end = + new Date().getTime();
+					ticketDB.save().then(() => {
+						// actualiza sólo la pantalla del cliente con el turno finalizado
+						// server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
+						server.io.to(assistantDB.id_company).emit('actualizar-pantalla');
+					}).catch(() => {
+						return res.status(500).json({
 							ok: false,
-							msg: 'No existen tickets pendientes de resolución',
-							ticket: null
+							msg: 'Ocurrio un error al cerrar el ticket anterior.',
+							ticket: ticketDB
 						})
-					}
+					})
+				}
+			})
 
-					if (ticketDB) {
+			// Busco un nuevo ticket para atender
+			Ticket.findOne({
+				id_company: assistantDB.id_company,
+				id_skill: { $in: assistantDB.id_skills },
+				id_desk: null,
+				tm_end: null
+			}).then(ticketDB => {
 
-						ticketDB.tm_att = + new Date().getTime();
-						ticketDB.id_desk = idDesk;
-						ticketDB.id_socket_desk = idSocketDesk;
-						ticketDB.id_assistant = idAssistant;
-						ticketDB.cd_desk = cdDesk;
-
-						ticketDB.save().then(ticketSaved => {
-
-							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${cdDesk} por ${assistantDB.tx_name} ` });
-							//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
-							server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
-
-							return res.status(200).json({
-								ok: true,
-								msg: 'Ticket obtenido correctamente',
-								ticket: ticketDB
-							});
-
-						}).catch(() => {
-							return res.status(400).json({
-								ok: false,
-								msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
-								ticket: null
-							});
-						})
-
-					}
-
-				}).catch(() => {
-					return res.status(500).json({
+				if (!ticketDB) {
+					return res.status(200).json({
 						ok: false,
-						msg: 'Error al consultar el ticket',
+						msg: 'No existen tickets pendientes de resolución',
 						ticket: null
 					})
+				}
+
+				if (ticketDB) {
+
+					ticketDB.tm_att = + new Date().getTime();
+					ticketDB.id_desk = idDesk;
+					ticketDB.id_socket_desk = idSocketDesk;
+					ticketDB.id_assistant = idAssistant;
+					ticketDB.cd_desk = cdDesk;
+
+					ticketDB.save().then(ticketSaved => {
+
+						server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${cdDesk} por ${assistantDB.tx_name} ` });
+						//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
+						server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
+
+						return res.status(200).json({
+							ok: true,
+							msg: 'Ticket obtenido correctamente',
+							ticket: ticketDB
+						});
+
+					}).catch(() => {
+						return res.status(400).json({
+							ok: false,
+							msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
+							ticket: null
+						});
+					})
+
+				}
+
+			}).catch(() => {
+				return res.status(500).json({
+					ok: false,
+					msg: 'Error al consultar el ticket',
+					ticket: null
 				})
-			}
-		}).catch(() => {
-			return res.status(500).json({
-				ok: false,
-				msg: 'Error al consultar el asistente',
-				assistant: null
 			})
+		}
+	}).catch(() => {
+		return res.status(500).json({
+			ok: false,
+			msg: 'Error al consultar el asistente',
+			assistant: null
 		})
+	})
 
 
 
 
-	
+
 
 
 
@@ -242,23 +240,46 @@ function cancelTicket(req: Request, res: Response) {
 	})
 }
 
-function rejectTicket(req: Request, res: Response) {
-	// const { idCompany, idDesk } = req.body;
-	// todo: poner a null tm_att
-	// const server = Server.instance;
-	// const numTickets = this.readPendingTickets(idCompany);
-	// server.io.emit('nuevo-turno', numTickets); // para asistentes
-	// server.io.emit('actualizar-pantalla'); // para clientes
+function releaseTicket(req: Request, res: Response) {
+	const idTicket = req.body.idTicket;
+	Ticket.findByIdAndUpdate(idTicket, { 
+		tm_att: null,
+		id_desk: null,
+		id_socket_desk: null,
+		id_assistant: null,
+		cd_desk: null 
+	}).then(ticketReleased => {
+		if (ticketReleased?.id_company) { server.io.to(ticketReleased.id_company).emit('actualizar-pantalla'); }
+		return res.status(200).json({
+			ok: true,
+			msg: 'Ticket soltado correctamente',
+			ticket: ticketReleased
+		})
+	}).catch(() => {
+		return res.status(400).json({
+			ok: false,
+			msg: 'No se pudo soltar el ticket',
+			ticket: null
+		})
+	})
 };
 
 function endTicket(req: Request, res: Response) {
-	// const { idDesk } = req.body;
-	// const ticketToEnd = getPendingTicket(idDesk);
-	// const socketCli = ticketToEnd.ticket?.id_socket;
-	// res.json(ticket.finalizarTicket(idDesk));
-	// const server = Server.instance;
-	// // se actualiza la pantalla SOLO del cliente con el turno finalizado
-	// if (socketCli) { server.io.to(socketCli).emit('actualizar-pantalla'); }
+	const idTicket = req.body.idTicket;
+	Ticket.findByIdAndUpdate(idTicket, { tm_end: + new Date().getTime() }).then(ticketEnded => {
+		if (ticketEnded?.id_company) { server.io.to(ticketEnded.id_company).emit('actualizar-pantalla'); }
+		return res.status(200).json({
+			ok: true,
+			msg: 'Ticket finalizado correctamente',
+			ticket: ticketEnded
+		})
+	}).catch(() => {
+		return res.status(400).json({
+			ok: false,
+			msg: 'No se pudo finalizar el ticket',
+			ticket: null
+		})
+	})
 };
 
 function getTickets(req: Request, res: Response) {
@@ -307,7 +328,7 @@ function updateSocket(req: Request, res: Response) {
 		switch (oldSocket) {
 			case ticketDB.id_socket: // actualizo el socket del cliente
 				ticketDB.id_socket = newSocket;
-				requestUpdateTo = ticketDB.id_socket_desk;
+				if(ticketDB.id_socket_desk) { requestUpdateTo = ticketDB.id_socket_desk; }
 				break;
 			case ticketDB.id_socket_desk: // actualizo el socket del asistente
 				ticketDB.id_socket_desk = newSocket
@@ -360,7 +381,7 @@ export = {
 	createTicket,
 	cancelTicket,
 	takeTicket,
-	rejectTicket,
+	releaseTicket,
 	endTicket,
 	getTickets,
 	updateSocket,

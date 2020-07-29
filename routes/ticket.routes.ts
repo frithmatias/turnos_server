@@ -18,7 +18,7 @@ ticketRoutes.put('/actualizarsocket', ticketController.updateSocket);
 
 // desktop requests
 ticketRoutes.post('/taketicket', mdAuth.verificaToken, ticketController.takeTicket);
-ticketRoutes.post('/devolverticket', mdAuth.verificaToken, ticketController.rejectTicket);
-ticketRoutes.post('/finalizarticket', mdAuth.verificaToken, ticketController.endTicket);
+ticketRoutes.post('/releaseticket', mdAuth.verificaToken, ticketController.releaseTicket);
+ticketRoutes.post('/endticket', mdAuth.verificaToken, ticketController.endTicket);
 
 export default ticketRoutes;

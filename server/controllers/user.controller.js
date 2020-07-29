@@ -166,7 +166,6 @@ function deleteUser(req, res) {
 }
 function checkCompanyExists(req, res) {
     let pattern = req.body.pattern;
-    console.log(req.body);
     company_model_1.Company.findOne({ tx_public_name: pattern }).then(companyDB => {
         if (!companyDB) {
             return res.status(200).json({
@@ -188,7 +187,6 @@ function checkCompanyExists(req, res) {
 }
 function checkEmailExists(req, res) {
     let pattern = req.body.pattern;
-    console.log(pattern);
     user_model_1.User.findOne({ tx_email: pattern }).then(userDB => {
         if (!userDB) {
             return res.status(200).json({
@@ -371,8 +369,8 @@ function obtenerMenu(id_role) {
             icon: "mdi mdi-settings",
             submenu: [
                 { titulo: "Home", url: "/assistant/home", icon: "home" },
-                { titulo: "Dashboard", url: "/asistente/dashboard", icon: "dashboard" },
-                { titulo: "Escritorio", url: "/asistente/desktop", icon: "desktop_windows" },
+                { titulo: "Dashboard", url: "/assistant/dashboard", icon: "dashboard" },
+                { titulo: "Escritorio", url: "/assistant/desktop", icon: "desktop_windows" },
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }
@@ -384,7 +382,7 @@ function obtenerMenu(id_role) {
                 { titulo: "Home", url: "/user/home", icon: "home_work" },
                 { titulo: "Mi Perfil", url: "/user/profile", icon: "face" },
                 { titulo: "Asistentes", url: "/user/assistants", icon: "supervised_user_circle" },
-                { titulo: "Ventanillas", url: "/user/desktops", icon: "exit_to_app" },
+                { titulo: "Escritorios", url: "/user/desktops", icon: "exit_to_app" },
                 { titulo: "Skills", url: "/user/skills", icon: "playlist_add_check" },
                 { titulo: "Turnos", url: "/user/tickets", icon: "bookmark" },
                 { titulo: "Dashboard", url: "/user/dashboard", icon: "dashboard" },
