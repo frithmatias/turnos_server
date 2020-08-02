@@ -18,6 +18,7 @@ const user_routes_1 = __importDefault(require("./routes/user.routes"));
 const skill_routes_1 = __importDefault(require("./routes/skill.routes"));
 const desktop_routes_1 = __importDefault(require("./routes/desktop.routes"));
 const assistant_routes_1 = __importDefault(require("./routes/assistant.routes"));
+const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 // si en router.ts lo explorto de la siguiente manera
 // const router = Router();
 // export default router;
@@ -47,6 +48,7 @@ server.app.use('/u', user_routes_1.default);
 server.app.use('/s', skill_routes_1.default);
 server.app.use('/d', desktop_routes_1.default);
 server.app.use('/a', assistant_routes_1.default);
+server.app.use('/n', notification_routes_1.default);
 server.start(() => {
     console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }
 });

@@ -14,6 +14,7 @@ import userRoutes from './routes/user.routes';
 import skillRoutes from './routes/skill.routes';
 import desktopRoutes from './routes/desktop.routes';
 import assistantRoutes from './routes/assistant.routes';
+import notificationRoutes from './routes/notification.routes';
 
 
 // si en router.ts lo explorto de la siguiente manera
@@ -44,16 +45,16 @@ server.app.use(bodyParser.json());
 // CORS
 server.app.use(cors({ origin: true, credentials: true })); // permito que cualquier persona puede llamar mis servicios.
 
-
 // RUTAS
 server.app.use('/t', ticketRoutes);
 server.app.use('/p', publicRoutes);
 server.app.use('/c', companyRoutes);
-
 server.app.use('/u', userRoutes);
 server.app.use('/s', skillRoutes);
 server.app.use('/d', desktopRoutes);
 server.app.use('/a', assistantRoutes);
+server.app.use('/n', notificationRoutes);
+
 
 server.start(() => {
 	console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }
