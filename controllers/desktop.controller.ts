@@ -31,7 +31,7 @@ function createDesktop(req: Request, res: Response) {
     })
 }
 
-function readDesktops(req: Request, res: Response) {
+function readDesktopsUser(req: Request, res: Response) {
     let idUser = req.params.idUser;
 
     Company.find({ id_user: idUser }).then(companiesDB => {
@@ -66,7 +66,7 @@ function readDesktops(req: Request, res: Response) {
     })
 }
 
-function readDesktopsCompany(req: Request, res: Response) {
+function readDesktops(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
 
     Desktop.find({ id_company: idCompany }).populate('id_company').then(desktopsDB => {
@@ -200,8 +200,8 @@ function releaseDesktop(req: Request, res: Response) {
 
 export = {
     createDesktop,
+    readDesktopsUser,
     readDesktops,
-    readDesktopsCompany,
     deleteDesktop,
     takeDesktop,
     releaseDesktop

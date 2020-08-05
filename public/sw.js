@@ -1,4 +1,4 @@
-const CACHE_STATIC = 'static-0.1'
+const CACHE_STATIC = 'static-0.4'
 const CACHE_DYNAMIC = 'dynamic-0.1'
 const CACHE_INMUTABLE = 'inmutable-0.1'
 
@@ -17,14 +17,14 @@ self.addEventListener('install', e => {
       '/index.html',
       '/offline.html',
       '/manifest.json',
-      '/4.32f8452458a163cf1734.js',
-      '/5.9e28015f4984f62985f8.js',
-      '/6.b6d69329ab9fd2f92132.js',
-      '/7.4dc0b9ac527b3d9a72cd.js',
-      '/main.7162c3d379a3d2a2a2d8.js',
+      '/4.affdce382e8924eb57cf.js',
+      '/5.04b5939df60e3562af23.js',
+      '/6.269081bb6f1a5fd72c1e.js',
+      '/7.b6ae8b3e26f7fbda9c80.js',
+      '/main.58edc351fcb460ab5ff5.js',
       '/polyfills.ac27f9db7182d098bf2e.js',
-      '/runtime.b4980cb99602ee9f5765.js',
-      '/styles.99f33d47e1a79e73b0d1.css'
+      '/runtime.d3554a9fdfc8e405c617.js',
+      '/styles.ab146d6d7d27789c4406.css'
     ])
   })
 

@@ -32,6 +32,32 @@ function createSkill(req: Request, res: Response) {
 }
 
 function readSkills(req: Request, res: Response) {
+
+    let idCompany = req.params.idCompany;
+
+    Skill.find({ id_company: idCompany }).populate('id_company').then(skillsDB => {
+        if (!skillsDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No existen skills para la empresa seleccionada',
+                skills: null
+            })
+        }
+        return res.status(200).json({
+            ok: true,
+            msg: 'Skills obtenidos correctamente',
+            skills: skillsDB
+        })
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al consultar los skills para las empresas del usuario',
+            skills: null
+        })
+    })
+}
+
+function readSkillsUser(req: Request, res: Response) {
     let idUser = req.params.idUser;
 
     Company.find({ id_user: idUser }).then(companiesDB => {
@@ -66,32 +92,6 @@ function readSkills(req: Request, res: Response) {
     })
 }
 
-function readSkillsCompany(req: Request, res: Response) {
-
-    let idCompany = req.params.idCompany;
-
-    Skill.find({ id_company: idCompany }).populate('id_company').then(skillsDB => {
-        if (!skillsDB) {
-            return res.status(400).json({
-                ok: false,
-                msg: 'No existen skills para la empresa seleccionada',
-                skills: null
-            })
-        }
-        return res.status(200).json({
-            ok: true,
-            msg: 'Skills obtenidos correctamente',
-            skills: skillsDB
-        })
-    }).catch(() => {
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error al consultar los skills para las empresas del usuario',
-            skills: null
-        })
-    })
-}
-
 function deleteSkill(req: Request, res: Response) {
     let idSkill = req.params.idSkill;
     Skill.findByIdAndDelete(idSkill).then((skillDeleted) => {
@@ -111,7 +111,7 @@ function deleteSkill(req: Request, res: Response) {
 
 export = {
     createSkill,
-    readSkillsCompany,
+    readSkillsUser,
     readSkills,
     deleteSkill,
 }

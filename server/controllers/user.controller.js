@@ -51,7 +51,6 @@ function attachCompany(req, res) {
     user_model_1.User.findByIdAndUpdate(idUser, { 'id_company': company._id }, { new: true })
         .populate('id_company')
         .then(userUpdated => {
-        console.log(userUpdated);
         return res.status(200).json({
             ok: true,
             msg: 'La empresa se asigno al usuario correctamente',
@@ -127,7 +126,9 @@ function loginGoogle(req, res) {
                 err: null
             });
         }
-        user_model_1.User.findOne({ tx_email: googleUser.email }).then(userDB => {
+        user_model_1.User.findOne({ tx_email: googleUser.email })
+            .populate('id_company')
+            .then(userDB => {
             if (userDB) { // el usuario existe, intenta loguearse
                 if (userDB.bl_google === false) {
                     return res.status(400).json({
@@ -139,7 +140,8 @@ function loginGoogle(req, res) {
                 else {
                     // Google SignIn -> new token
                     var token = token_1.default.getJwtToken({ usuario: userDB });
-                    userDB.updateOne({ fc_lastlogin: +new Date().getTime() }).then(userSaved => {
+                    userDB.updateOne({ fc_lastlogin: +new Date().getTime() })
+                        .then(userSaved => {
                         userSaved.tx_password = ":)";
                         res.status(200).json({
                             ok: true,

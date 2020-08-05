@@ -156,9 +156,8 @@ function updateCompany(req: Request, res: Response) {
 function deleteCompany(req: Request, res: Response) {
 
   var idCompany = req.params.idCompany;
-  console.log('ELIMINANDO', idCompany)
-
-  let users = User.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
+  
+  let users = User.deleteMany({ id_company: idCompany, id_role: 'ASSISTANT_ROLE' }).then(usersDeleted => usersDeleted)
   let skills = Skill.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
   let desktops = Desktop.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
   let company = Company.findByIdAndDelete(idCompany).then(usersDeleted => usersDeleted)

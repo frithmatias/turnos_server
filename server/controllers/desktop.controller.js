@@ -26,7 +26,7 @@ function createDesktop(req, res) {
         });
     });
 }
-function readDesktops(req, res) {
+function readDesktopsUser(req, res) {
     let idUser = req.params.idUser;
     company_model_1.Company.find({ id_user: idUser }).then(companiesDB => {
         return companiesDB.map(company => company._id);
@@ -59,7 +59,7 @@ function readDesktops(req, res) {
         });
     });
 }
-function readDesktopsCompany(req, res) {
+function readDesktops(req, res) {
     let idCompany = req.params.idCompany;
     desktop_model_1.Desktop.find({ id_company: idCompany }).populate('id_company').then(desktopsDB => {
         if (!desktopsDB) {
@@ -167,8 +167,8 @@ function releaseDesktop(req, res) {
 }
 module.exports = {
     createDesktop,
+    readDesktopsUser,
     readDesktops,
-    readDesktopsCompany,
     deleteDesktop,
     takeDesktop,
     releaseDesktop

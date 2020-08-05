@@ -11,7 +11,8 @@ const assistantRoutes = Router();
 
 assistantRoutes.post('/createassistant', mdAuth.verificaToken, AssistantController.createAssistant);
 assistantRoutes.post('/updateassistant', mdAuth.verificaToken, AssistantController.updateAssistant);
-assistantRoutes.get('/readassistants/:idUser', mdAuth.verificaToken, AssistantController.readAssistants);
+assistantRoutes.get('/readassistantsuser/:idUser', mdAuth.verificaToken, AssistantController.readAssistantsUser);
+assistantRoutes.get('/readassistants/:idCompany', mdAuth.verificaToken, AssistantController.readAssistants);
 assistantRoutes.delete('/deleteassistant/:idAssistant', mdAuth.verificaToken, AssistantController.deleteAssistant);
 
 export default assistantRoutes;

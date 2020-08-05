@@ -10,8 +10,8 @@ import DesktopController from '../controllers/desktop.controller';
 const desktopRoutes = Router();
 
 desktopRoutes.post('/createdesktop', mdAuth.verificaToken, DesktopController.createDesktop);
-desktopRoutes.get('/readdesktops/:idUser', mdAuth.verificaToken, DesktopController.readDesktops);
-desktopRoutes.get('/readdesktopscompany/:idCompany', mdAuth.verificaToken, DesktopController.readDesktopsCompany);
+desktopRoutes.get('/readdesktopsuser/:idUser', mdAuth.verificaToken, DesktopController.readDesktopsUser);
+desktopRoutes.get('/readdesktops/:idCompany', mdAuth.verificaToken, DesktopController.readDesktops);
 
 desktopRoutes.delete('/deletedesktop/:idDesktop', mdAuth.verificaToken, DesktopController.deleteDesktop);
 desktopRoutes.post('/takedesktop', mdAuth.verificaToken, DesktopController.takeDesktop);

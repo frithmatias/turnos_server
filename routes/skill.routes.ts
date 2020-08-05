@@ -10,8 +10,8 @@ import SkillController from '../controllers/skill.controller';
 const skillRoutes = Router();
 
 skillRoutes.post('/createskill', mdAuth.verificaToken, SkillController.createSkill);
-skillRoutes.get('/readskills/:idUser', SkillController.readSkills);
-skillRoutes.get('/readskillscompany/:idCompany', SkillController.readSkillsCompany);
+skillRoutes.get('/readskills/:idCompany', SkillController.readSkills);
+skillRoutes.get('/readskillsuser/:idUser', SkillController.readSkillsUser);
 skillRoutes.delete('/deleteskill/:idSkill', mdAuth.verificaToken, SkillController.deleteSkill);
 
 export default skillRoutes;

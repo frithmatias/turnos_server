@@ -34,16 +34,14 @@ function createAssistant(req, res) {
         });
     });
 }
-function readAssistants(req, res) {
+function readAssistantsUser(req, res) {
     let idUser = req.params.idUser;
     company_model_1.Company.find({ id_user: idUser }).then(companiesDB => {
         return companiesDB.map(data => data._id); // solo quiero los _id
     }).then(resp => {
-        console.log(resp);
         user_model_1.User
             .find({ $or: [{ '_id': idUser }, { id_company: { $in: resp } }] })
             .populate('id_company').then(assistantsDB => {
-            console.log(assistantsDB);
             if (!assistantsDB) {
                 return res.status(400).json({
                     ok: false,
@@ -68,6 +66,30 @@ function readAssistants(req, res) {
                 msg: 'Error al consultar las empresas del usuario',
                 assistants: null
             });
+        });
+    });
+}
+function readAssistants(req, res) {
+    let idCompany = req.params.idCompany;
+    user_model_1.User.find({ id_company: idCompany })
+        .populate('id_company').then(assistantsDB => {
+        if (!assistantsDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No existen asistentes para la empresa seleccionada',
+                assistants: null
+            });
+        }
+        return res.status(200).json({
+            ok: true,
+            msg: 'Asistentes obtenidos correctamente',
+            assistants: assistantsDB
+        });
+    }).catch(() => {
+        return res.status(500).json({
+            ok: false,
+            msg: 'Error al consultar los asistentes para las empresas del usuario',
+            assistants: null
         });
     });
 }
@@ -115,6 +137,7 @@ function deleteAssistant(req, res) {
 }
 module.exports = {
     createAssistant,
+    readAssistantsUser,
     readAssistants,
     updateAssistant,
     deleteAssistant,
