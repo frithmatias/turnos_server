@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Desktop } from '../models/desktop.model';
 import { DeskStat } from '../models/deskstat.model';
+import { Company } from '../models/company.model';
 
 // ========================================================
 // Desktop Methods
@@ -31,19 +32,63 @@ function createDesktop(req: Request, res: Response) {
 }
 
 function readDesktops(req: Request, res: Response) {
+    let idUser = req.params.idUser;
+
+    Company.find({ id_user: idUser }).then(companiesDB => {
+        return companiesDB.map(company => company._id)
+    }).then(resp => {
+        Desktop.find({ id_company: { $in: resp } }).populate('id_company').then(desktopsDB => {
+            if (!desktopsDB) {
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'No existen escritorios para la empresa seleccionada',
+                    desktops: null
+                })
+            }
+            return res.status(200).json({
+                ok: true,
+                msg: 'Escritorios obtenidos correctamente',
+                desktops: desktopsDB
+            })
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al consultar los escritorios para las empresas del usuario',
+                desktops: null
+            })
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al consultar las empresas del usuario',
+                desktops: null
+            })
+        })
+    })
+}
+
+function readDesktopsCompany(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
-    Desktop.find({ id_company: idCompany }).then((desktops) => {
-        res.status(200).json({
+
+    Desktop.find({ id_company: idCompany }).populate('id_company').then(desktopsDB => {
+        if (!desktopsDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No existen escritorios para la empresa seleccionada',
+                desktops: null
+            })
+        }
+        return res.status(200).json({
             ok: true,
             msg: 'Escritorios obtenidos correctamente',
-            desktops
+            desktops: desktopsDB
         })
     }).catch(() => {
-        res.status(400).json({
+        return res.status(500).json({
             ok: false,
-            msg: 'Error al consultar los escritorios',
+            msg: 'Error al consultar los escritorios para las empresas del usuario',
             desktops: null
         })
+
     })
 }
 
@@ -112,7 +157,7 @@ function releaseDesktop(req: Request, res: Response) {
     let idDesktop = req.body.idDesktop;
 
     Desktop.findByIdAndUpdate(idDesktop, { id_assistant: null }).then(desktopUpdated => {
-        
+
         if (!desktopUpdated) {
             return res.status(400).json({
                 ok: false,
@@ -120,12 +165,12 @@ function releaseDesktop(req: Request, res: Response) {
                 desktop: null
             })
         }
-                
+
         DeskStat.findOneAndUpdate({
             id_desktop: idDesktop,
             id_assistant: desktopUpdated.id_assistant,
             fc_end: null
-        },{fc_end: + new Date().getTime()}).then(desktopReleased => {
+        }, { fc_end: + new Date().getTime() }).then(desktopReleased => {
 
             return res.status(200).json({
                 ok: true,
@@ -156,6 +201,7 @@ function releaseDesktop(req: Request, res: Response) {
 export = {
     createDesktop,
     readDesktops,
+    readDesktopsCompany,
     deleteDesktop,
     takeDesktop,
     releaseDesktop

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
+import { Company } from '../models/company.model';
 
 // ========================================================
 // Assistant Methods
@@ -37,22 +38,42 @@ function createAssistant(req: Request, res: Response) {
 }
 
 function readAssistants(req: Request, res: Response) {
-    let idCompany = req.params.idCompany;
-
-    User.find({ id_company: idCompany }).then((assistants) => {
-
-        res.status(200).json({
-            ok: true,
-            msg: 'Usuarios obtenidos correctamente',
-            assistants
-        })
-    }).catch(() => {
-        res.status(400).json({
-            ok: false,
-            msg: 'Error al consultar los asistentes',
-            assistants: null
+    let idUser = req.params.idUser;
+    Company.find({ id_user: idUser }).then(companiesDB => {
+        return companiesDB.map(data => data._id) // solo quiero los _id
+    }).then(resp => {
+        console.log(resp);
+        User
+        .find({ $or: [{'_id': idUser}, { id_company: { $in: resp } }] })
+        .populate('id_company').then(assistantsDB => {
+            console.log(assistantsDB)
+            if (!assistantsDB) {
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'No existen asistentes para la empresa seleccionada',
+                    assistants: null
+                })
+            }
+            return res.status(200).json({
+                ok: true,
+                msg: 'Asistentes obtenidos correctamente',
+                assistants: assistantsDB
+            })
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al consultar los asistentes para las empresas del usuario',
+                assistants: null
+            })
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al consultar las empresas del usuario',
+                assistants: null
+            })
         })
     })
+
 }
 
 function updateAssistant(req: Request, res: Response) {
@@ -61,8 +82,9 @@ function updateAssistant(req: Request, res: Response) {
 
     let assistant: any = {
         id_role: body.id_role,
-        tx_email: body.tx_email,
+        id_company: body.id_company,
         tx_name: body.tx_name,
+        tx_email: body.tx_email,
         id_skills: body.id_skills
     }
 

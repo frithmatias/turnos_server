@@ -1,4 +1,4 @@
-const CACHE_STATIC = 'static-0.4'
+const CACHE_STATIC = 'static-0.1'
 const CACHE_DYNAMIC = 'dynamic-0.1'
 const CACHE_INMUTABLE = 'inmutable-0.1'
 
@@ -7,7 +7,7 @@ const CACHE_INMUTABLE = 'inmutable-0.1'
 // ----------------------------------------------------------
 self.addEventListener('install', e => {
   let static = caches.open(CACHE_STATIC).then(cache => {
-
+    // waitUntil espera una promesa por lo tanto tengo que usar RETURN
     return cache.addAll([
       '/',
       '/assets/new-ticket.mp3',
@@ -18,13 +18,13 @@ self.addEventListener('install', e => {
       '/offline.html',
       '/manifest.json',
       '/4.32f8452458a163cf1734.js',
-      '/5.5b52c9a1e82f190f6dc7.js',
-      '/6.899432eb217875ee6c16.js',
-      '/7.7e3b4524007f43f0c6bc.js',
-      '/main.8aaf35d0b222d371f6b1.js',
+      '/5.9e28015f4984f62985f8.js',
+      '/6.b6d69329ab9fd2f92132.js',
+      '/7.4dc0b9ac527b3d9a72cd.js',
+      '/main.7162c3d379a3d2a2a2d8.js',
       '/polyfills.ac27f9db7182d098bf2e.js',
-      '/runtime.1cd2dcba659184f80f12.js',
-      '/styles.af3524690ed1f7ea99d1.css'
+      '/runtime.b4980cb99602ee9f5765.js',
+      '/styles.99f33d47e1a79e73b0d1.css'
     ])
   })
 
@@ -40,7 +40,6 @@ self.addEventListener('install', e => {
 // ----------------------------------------------------------
 // delete old static cache
 // ----------------------------------------------------------
-
 self.addEventListener('activate', e => {
   const respuesta = caches.keys().then(keys => {
     keys.forEach(key => {
@@ -57,7 +56,6 @@ self.addEventListener('activate', e => {
 // ----------------------------------------------------------
 
 self.addEventListener('fetch', e => {
-  // Verifico si existe el recurso en cache
   const respuesta = caches
     .match(e.request)
     .then(resp => {
@@ -65,13 +63,11 @@ self.addEventListener('fetch', e => {
         return resp
       }
       return fetch(e.request).then(resp => {
-        
         if (e.request.method !== 'POST') {
           caches.open(CACHE_DYNAMIC).then(cache => {
             cache.put(e.request, resp.clone())
           })
         }
-
         return resp.clone()
       })
     })
@@ -87,7 +83,6 @@ self.addEventListener('fetch', e => {
 
 // escuchar push
 self.addEventListener('push', e => {
-
   const data = JSON.parse(e.data.text());
   const title = data.title;
   const msg = data.msg;
@@ -105,33 +100,32 @@ self.addEventListener('push', e => {
       {
           action: 'ver-pantalla',
           title: 'Ver Pantalla',
-          // icon: 'assets/avatars/.jpg'
+          // icon: 'assets/avatars/thor.jpg'
       },
       {
           action: 'obtener-turno',
           title: 'Obtener Turno',
-         // icon: 'assets/avatars/.jpg'
+         // icon: 'assets/avatars/ironman.jpg'
       }
   ]
   };
-
+  // como toda accion en el SW tengo que esperar a que termine de realizar toda la notificación 
+  // porque puede demorar unos segundos.
   e.waitUntil( self.registration.showNotification(title, options));
 })
 
 self.addEventListener('notificationclick', e => {
-
   const notificacion = e.notification;
   const accion = e.action;
   notificacion.close();
-
 })
 
 self.addEventListener('notificationclick', e => {
-
   const notificacion = e.notification;
   const accion = e.action;
+  //matchAll() busca en todas las pestañas abiertas del mismo sitio, y regresa una promesa 
   const respuesta = clients.matchAll().then( clientes => {
-
+      // clientes es un array de todos los tabs abiertos de mi aplicación yo sólo quiero el que se encuentra visible 
       let cliente = clientes.find( c => {
           return c.visibilityState === 'visible';
       })

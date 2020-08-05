@@ -12,10 +12,10 @@ const userRoutes = Router();
 userRoutes.post('/updatetoken', mdAuth.verificaToken, UserController.updateToken);
 userRoutes.post('/google', UserController.loginGoogle);
 userRoutes.post('/login', UserController.loginUser);
-userRoutes.post('/register', UserController.registerUser);
-userRoutes.post('/update', mdAuth.verificaToken, UserController.updateUser);
-userRoutes.post('/checkcompanyexists', UserController.checkCompanyExists);
+userRoutes.post('/register', UserController.createUser);
 userRoutes.post('/checkemailexists', UserController.checkEmailExists);
+userRoutes.post('/attach/:idUser', mdAuth.verificaToken, UserController.attachCompany);
+
 
 
 export default userRoutes;

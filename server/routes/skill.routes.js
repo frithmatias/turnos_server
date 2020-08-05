@@ -11,6 +11,7 @@ const skill_controller_1 = __importDefault(require("../controllers/skill.control
 // ROUTES
 const skillRoutes = express_1.Router();
 skillRoutes.post('/createskill', auth_1.default.verificaToken, skill_controller_1.default.createSkill);
-skillRoutes.get('/readskills/:idCompany', skill_controller_1.default.readSkills);
+skillRoutes.get('/readskills/:idUser', skill_controller_1.default.readSkills);
+skillRoutes.get('/readskillscompany/:idCompany', skill_controller_1.default.readSkillsCompany);
 skillRoutes.delete('/deleteskill/:idSkill', auth_1.default.verificaToken, skill_controller_1.default.deleteSkill);
 exports.default = skillRoutes;

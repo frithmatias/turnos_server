@@ -1,5 +1,6 @@
 "use strict";
 const skill_model_1 = require("../models/skill.model");
+const company_model_1 = require("../models/company.model");
 // ========================================================
 // Skill Methods
 // ========================================================
@@ -25,17 +26,57 @@ function createSkill(req, res) {
     });
 }
 function readSkills(req, res) {
+    let idUser = req.params.idUser;
+    company_model_1.Company.find({ id_user: idUser }).then(companiesDB => {
+        return companiesDB.map(company => company._id);
+    }).then(resp => {
+        skill_model_1.Skill.find({ id_company: { $in: resp } }).populate('id_company').then(skillsDB => {
+            if (!skillsDB) {
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'No existen skills para la empresa seleccionada',
+                    skills: null
+                });
+            }
+            return res.status(200).json({
+                ok: true,
+                msg: 'Skills obtenidos correctamente',
+                skills: skillsDB
+            });
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al consultar los skills para las empresas del usuario',
+                skills: null
+            });
+        }).catch(() => {
+            return res.status(500).json({
+                ok: false,
+                msg: 'Error al consultar las empresas del usuario',
+                skills: null
+            });
+        });
+    });
+}
+function readSkillsCompany(req, res) {
     let idCompany = req.params.idCompany;
-    skill_model_1.Skill.find({ id_company: idCompany }).then((skills) => {
-        res.status(200).json({
+    skill_model_1.Skill.find({ id_company: idCompany }).populate('id_company').then(skillsDB => {
+        if (!skillsDB) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No existen skills para la empresa seleccionada',
+                skills: null
+            });
+        }
+        return res.status(200).json({
             ok: true,
             msg: 'Skills obtenidos correctamente',
-            skills
+            skills: skillsDB
         });
     }).catch(() => {
-        res.status(400).json({
+        return res.status(500).json({
             ok: false,
-            msg: 'Error al consultar los skills',
+            msg: 'Error al consultar los skills para las empresas del usuario',
             skills: null
         });
     });
@@ -58,6 +99,7 @@ function deleteSkill(req, res) {
 }
 module.exports = {
     createSkill,
+    readSkillsCompany,
     readSkills,
     deleteSkill,
 };

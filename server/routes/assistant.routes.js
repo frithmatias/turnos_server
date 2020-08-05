@@ -12,6 +12,6 @@ const assistant_controller_1 = __importDefault(require("../controllers/assistant
 const assistantRoutes = express_1.Router();
 assistantRoutes.post('/createassistant', auth_1.default.verificaToken, assistant_controller_1.default.createAssistant);
 assistantRoutes.post('/updateassistant', auth_1.default.verificaToken, assistant_controller_1.default.updateAssistant);
-assistantRoutes.get('/readassistants/:idCompany', auth_1.default.verificaToken, assistant_controller_1.default.readAssistants);
+assistantRoutes.get('/readassistants/:idUser', auth_1.default.verificaToken, assistant_controller_1.default.readAssistants);
 assistantRoutes.delete('/deleteassistant/:idAssistant', auth_1.default.verificaToken, assistant_controller_1.default.deleteAssistant);
 exports.default = assistantRoutes;

@@ -11,7 +11,8 @@ const desktop_controller_1 = __importDefault(require("../controllers/desktop.con
 // ROUTES
 const desktopRoutes = express_1.Router();
 desktopRoutes.post('/createdesktop', auth_1.default.verificaToken, desktop_controller_1.default.createDesktop);
-desktopRoutes.get('/readdesktops/:idCompany', auth_1.default.verificaToken, desktop_controller_1.default.readDesktops);
+desktopRoutes.get('/readdesktops/:idUser', auth_1.default.verificaToken, desktop_controller_1.default.readDesktops);
+desktopRoutes.get('/readdesktopscompany/:idCompany', auth_1.default.verificaToken, desktop_controller_1.default.readDesktopsCompany);
 desktopRoutes.delete('/deletedesktop/:idDesktop', auth_1.default.verificaToken, desktop_controller_1.default.deleteDesktop);
 desktopRoutes.post('/takedesktop', auth_1.default.verificaToken, desktop_controller_1.default.takeDesktop);
 desktopRoutes.post('/releasedesktop', auth_1.default.verificaToken, desktop_controller_1.default.releaseDesktop);

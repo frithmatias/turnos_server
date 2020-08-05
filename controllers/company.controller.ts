@@ -1,9 +1,41 @@
 import { Request, Response } from 'express';
 import { Company } from '../models/company.model';
+import { User } from '../models/user.model';
+import { Skill } from '../models/skill.model';
+import { Desktop } from '../models/desktop.model';
 
 // ========================================================
 // Company Methods
 // ========================================================
+
+function createCompany(req: Request, res: Response) {
+  // Save Company
+  var body = req.body;
+  var company = new Company({
+    id_user: body.company.id_user,
+    tx_company_name: body.company.tx_company_name,
+    tx_public_name: body.company.tx_public_name,
+    tx_address_street: body.company.tx_address_street,
+    tx_address_number: body.company.tx_address_number,
+    cd_city: body.company.cd_city,
+    fc_att_start: null,
+    fc_att_end: null
+  });
+
+  company.save().then((companySaved) => {
+    return res.status(200).json({
+      ok: true,
+      msg: 'Empresa creada correctamente',
+      company: companySaved
+    })
+  }).catch((err) => {
+    return res.status(400).json({
+      ok: false,
+      msg: err,
+      company: null
+    })
+  })
+}
 
 function readCompany(req: Request, res: Response) {
   var idCompany = String(req.params.idCompany);
@@ -33,10 +65,38 @@ function readCompany(req: Request, res: Response) {
   })
 }
 
+function readCompanies(req: Request, res: Response) {
+  var idUser = String(req.params.idUser);
+
+  Company.find({ id_user: idUser }).then(companiesDB => {
+
+    if (!companiesDB) {
+      return res.status(400).json({
+        ok: false,
+        msg: "No existen empresas asociadas al usuario",
+        companies: null
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      msg: 'Empresas obtenidas correctamente',
+      companies: companiesDB
+    });
+
+  }).catch(() => {
+    return res.status(500).json({
+      ok: false,
+      msg: "Error al buscar empresas asociadas a un usuario",
+      companies: null
+    });
+  })
+}
+
 function findCompany(req: Request, res: Response) {
 
   var pattern = String(req.params.pattern);
-  var regex = new RegExp( pattern, 'i');
+  var regex = new RegExp(pattern, 'i');
 
   Company.find({ tx_company_name: regex }).then(companiesDB => {
 
@@ -64,53 +124,95 @@ function findCompany(req: Request, res: Response) {
 }
 
 function updateCompany(req: Request, res: Response) {
+
   var body = req.body;
-  var id = req.params.id;
 
-  // Verifico que el id existe
-  Company.findById(id, (err, company) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        msg: "Error al buscar un company",
-        company: null
-      });
-    }
+  Company.findByIdAndUpdate(body._id, {
+    tx_company_name: body.tx_company_name,
+    tx_public_name: body.tx_public_name,
+    cd_city: body.cd_city,
+    tx_address_street: body.tx_address_street,
+    tx_address_number: body.tx_address_number
+  }).then(companyDB => {
 
-    if (!company) {
+    if (!companyDB) {
       return res.status(400).json({
         ok: false,
-        msg: "No existe la empresa",
+        msg: "No existe la empresa que desea actualizar",
         company: null
       });
     }
 
-    company.tx_company_name = body.tx_company_name;
-    company.tx_address_street = body.tx_address_street;
-    company.tx_address_number = body.tx_address_number;
+    return res.status(200).json({
+      ok: true,
+      msg: "Empresa actualizada correctamente",
+      company: companyDB
+    });
 
-    company.save((err, companySaved) => {
-      if (err) {
-        return res.status(400).json({
-          ok: false,
-          msg: "Error al actualizar la empresa",
-          errors: err
-        });
+  });
+
+}
+
+function deleteCompany(req: Request, res: Response) {
+
+  var idCompany = req.params.idCompany;
+  console.log('ELIMINANDO', idCompany)
+
+  let users = User.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
+  let skills = Skill.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
+  let desktops = Desktop.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
+  let company = Company.findByIdAndDelete(idCompany).then(usersDeleted => usersDeleted)
+  
+  Promise.all([users,skills,desktops,company]).then( resp => {
+    return res.status(200).json({
+      ok: true,
+      msg: 'La empresa y sus vínculos fueron eliminados correctamente',
+      company: {
+        company: resp[3],
+        childs: {users: resp[0],skills: resp[1],desktops: resp[2]}
       }
-
-      res.status(200).json({
-        ok: true,
-        msg: "Empresa guardada correctamente",
-        company: companySaved
-      });
+    });
+  }).catch(()=>{
+    return res.status(400).json({
+      ok: false,
+      msg: 'Error al eliminar la empresa o uno de sus vínculos'
     });
   });
 }
+ 
+function checkCompanyExists(req: Request, res: Response) {
 
+  let pattern = req.body.pattern;
+  Company.findOne({ tx_public_name: pattern }).then(companyDB => {
+
+    if (!companyDB) {
+      return res.status(200).json({
+        ok: true,
+        msg: 'No existe la empresa'
+      })
+    }
+
+    return res.status(200).json({
+      ok: false,
+      msg: 'La empresa ya existe.',
+      company: companyDB
+    })
+
+  }).catch(() => {
+    return res.status(500).json({
+      ok: false,
+      msg: 'Error al consultar si existe la empresa'
+    })
+  })
+}
 
 export = {
+  createCompany,
   readCompany,
+  readCompanies,
   findCompany,
   updateCompany,
+  deleteCompany,
+  checkCompanyExists
 }
 

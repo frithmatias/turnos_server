@@ -5,8 +5,6 @@ import Token from '../classes/token';
 import environment from '../global/environment';
 
 import { User } from '../models/user.model';
-import { Company } from '../models/company.model';
-import { Error } from '../models/error.model';
 
 // Google Login
 var GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
@@ -18,209 +16,60 @@ const oauthClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 // User Methods
 // ========================================================
 
-function registerUser(req: any, res: Response) {
+function createUser(req: any, res: Response) {
 
   var body = req.body;
-
-  // Save Company
-
-  var company = new Company({
-    tx_company_name: body.company.tx_company_name,
-    tx_public_name: body.company.tx_public_name,
-    tx_address_street: body.company.tx_address_street,
-    tx_address_number: body.company.tx_address_number,
-    cd_city: body.company.cd_city,
-    fc_att_start: null,
-    fc_att_end: null
+  var user = new User({
+    tx_name: body.user.tx_name,
+    tx_email: body.user.tx_email,
+    tx_password: bcrypt.hashSync(body.user.tx_password, 10),
+    bl_google: false,
+    fc_createdat: new Date()
   });
 
-  company.save().then((companySaved) => {
+  user.save().then((userSaved) => {
 
-    // Save User
-    var user = new User({
-      tx_name: body.user.tx_name,
-      tx_email: body.user.tx_email,
-      id_company: companySaved._id,
-      tx_password: bcrypt.hashSync(body.user.tx_password, 10),
-      bl_google: false,
-      fc_createdat: new Date()
-    });
-
-    user.save().then((userSaved) => {
-
-      res.status(201).json({
-        ok: true,
-        msg: "Usuario guardado correctamente.",
-        user: userSaved,
-        company: companySaved
-      });
-
-    }).catch((err) => {
-
-      companySaved.remove().then(companyRemoved => {
-
-        return res.status(400).json({
-          ok: false,
-          msg: "Error al guardar el usuario o el usuario existe."
-        });
-
-      }).catch(() => {
-
-        let error = new Error({
-          id_error: companySaved._id,
-          tx_error: 'company remove'
-        })
-
-        error.save();
-
-        return res.status(500).json({
-          ok: false,
-          msg: "No se pudo eliminar la empresa. El error quedó registrado.",
-          errors: err
-        });
-
-      });
-
+    res.status(201).json({
+      ok: true,
+      msg: "Usuario guardado correctamente.",
+      user: userSaved
     });
 
   }).catch((err) => {
 
     return res.status(400).json({
       ok: false,
-      msg: "Error al guardar la empresa.",
+      msg: "Error al guardar el usuario.",
       errors: err
     });
+
   });
 
 
 }
 
-function readUser(req: Request, res: Response) {
+function attachCompany(req: Request, res: Response) {
 
-  User.findById(req.params.id).populate('id_company').then(usuarioDB => {
+  let company  = req.body.company;
+  let idUser = req.params.idUser;
 
-    if (!usuarioDB) {
-      return res.status(400).json({
-        ok: false,
-        msg: "No existe un usuario con el id solicitado",
-        errors: { message: "No existe usuario con el id solicitado" }
-      });
-    }
-
-    res.status(200).json({
-      ok: true,
-      msg: 'Usuario encontrado correctamente',
-      usuario: usuarioDB
-    });
-  }).catch(() => {
-
-    return res.status(500).json({
-      ok: false,
-      msg: "Error al buscar el usuario",
-      usuario: null
-    });
-
-  })
-
-}
-
-function updateUser(req: Request, res: Response) {
-  var body = req.body;
-  var id = req.params.id;
-
-  // Verifico que el id existe
-  User.findById(id, (err, usuario) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        msg: "Error al buscar un usuario",
-        errors: err
-      });
-    }
-
-    if (!usuario) {
-      return res.status(400).json({
-        ok: false,
-        msg: "No existe un usuario con el id " + id,
-        errors: { message: "No existe usuario con el id solicitado" }
-      });
-    }
-
-    usuario.tx_name = body.tx_name;
-    usuario.tx_email = body.tx_email;
-    usuario.id_role = body.id_role;
-
-    usuario.save((err, usuarioGuardado) => {
-      if (err) {
-        return res.status(400).json({
-          ok: false,
-          msg: "Error al actualizar el usuario",
-          errors: err
-        });
-      }
-
-      usuarioGuardado.tx_password = ":)";
-
-      res.status(200).json({
-        ok: true,
-        usuario: usuarioGuardado
-      });
-    });
-  });
-}
-
-function deleteUser(req: Request, res: Response) {
-  var id = req.params.id;
-
-  User.findByIdAndRemove(id, (err, usuarioBorrado) => {
-    if (err) {
-      return res.status(500).json({
-        ok: false,
-        msg: "Error borrando usuario",
-        errors: err
-      });
-    }
-
-    if (!usuarioBorrado) {
-      return res.status(400).json({
-        ok: false,
-        msg: "Error borrando usuario, el usuario solicitado NO existe.",
-        errors: { message: "No existe el usuario que intenta borrar." } // Este objeto con los errores viene de mongoose
-      });
-    }
-
-    res.status(200).json({
-      ok: true,
-      msg: "Usuario borrado correctamente.",
-      usuario: usuarioBorrado
-    });
-  });
-}
-
-function checkCompanyExists(req: Request, res: Response) {
-
-  let pattern = req.body.pattern;
-  Company.findOne({ tx_public_name: pattern }).then(companyDB => {
-
-    if (!companyDB) {
-      return res.status(200).json({
-        ok: true,
-        msg: 'No existe la empresa'
-      })
-    }
-
+  User.findByIdAndUpdate(idUser, {'id_company': company._id}, {new: true})
+  .populate('id_company')
+  .then(userUpdated => {
+    console.log(userUpdated)
     return res.status(200).json({
-      ok: false,
-      msg: 'La empresa ya existe.',
-      company: companyDB
+      ok: true,
+      msg: 'La empresa se asigno al usuario correctamente',
+      user: userUpdated
     })
-
-  }).catch(() => {
+  }).catch(()=>{
     return res.status(500).json({
-      ok: false,
-      msg: 'Error al consultar si existe la empresa'
+      ok: true,
+      msg: 'No se pudo asignar la empresa al usuario',
+      user: null
     })
   })
+
 }
 
 function checkEmailExists(req: Request, res: Response) {
@@ -245,10 +94,6 @@ function checkEmailExists(req: Request, res: Response) {
   })
 
 }
-
-// ========================================================
-// Session methods
-// ========================================================
 
 function updateToken(req: any, res: Response) {
   var token = Token.getJwtToken({ usuario: req.usuario })
@@ -280,8 +125,8 @@ async function loginGoogle(req: Request, res: Response) {
     .catch(err => {
       res.status(403).json({
         ok: false,
-        msg: "Token no valido",
-        error: err
+        msg: "Token de Google no valido",
+        err
       });
     });
 
@@ -289,91 +134,101 @@ async function loginGoogle(req: Request, res: Response) {
   if (!googleUser) {
     return res.status(500).json({
       ok: false,
-      message: "No se pudo obtener el usuario de Google."
+      message: "No se pudo obtener el usuario de Google.",
+      err: null
     });
   }
 
-  User.findOne({ email: googleUser.email }, (err, usuarioDB) => {
-    if (err) {
-      res.status(500).json({
-        ok: false,
-        msg: "Error al buscar usuario",
-        error: err
-      });
-    }
+  User.findOne({ tx_email: googleUser.email }).then(userDB => {
 
-    if (usuarioDB) {
-      if (usuarioDB.bl_google === false) {
+    if (userDB) {  // el usuario existe, intenta loguearse
+
+      if (userDB.bl_google === false) {
+
         return res.status(400).json({
           ok: false,
           msg: "Para el email ingresado debe usar autenticación con clave.",
-          error: err
+          user: null
         });
+
       } else {
+
         // Google SignIn -> new token
-        var token = Token.getJwtToken({ usuario: usuarioDB })
+        var token = Token.getJwtToken({ usuario: userDB });
 
-        usuarioDB.fc_lastlogin = new Date();
-        usuarioDB.save((err, userLastLogin) => {
+        userDB.updateOne({fc_lastlogin: + new Date().getTime()}).then(userSaved => {
 
-          if (err) {
-            res.status(500).json({
-              ok: false,
-              msg: "Error al actualizar la fecha de ultimo login del usuario",
-              error: err
-            });
-          }
-
-          usuarioDB.tx_password = ":)";
-
+          userSaved.tx_password = ":)";
           res.status(200).json({
             ok: true,
-            msg: "Login exitoso.",
+            msg: 'Login exitoso',
             token: token,
-            id: usuarioDB.id,
-            usuario: usuarioDB,
-            menu: obtenerMenu(usuarioDB.id_role)
+            usuario: userDB,
+            menu: obtenerMenu(userDB.id_role)
           });
+
+        }).catch((err) => {
+
+          return res.status(400).json({
+            ok: false,
+            msg: 'Error al loguear el usuario de Google',
+            err
+          });
+
         });
 
       }
-    } else {
 
-      // el usuario no existe, hay que crearlo.
+    } else { // el usuario no existe, hay que crearlo.
+
       var usuario = new User();
 
-      usuario.tx_email = googleUser.tx_email;
-      usuario.tx_name = googleUser.tx_name;
-      usuario.tx_password = ":)";
-      usuario.id_company = googleUser.tx_email;
-      usuario.tx_img = googleUser.tx_img;
+      usuario.tx_email = googleUser.email;
+      usuario.tx_name = googleUser.name;
+      usuario.tx_password = ':)';
+      usuario.tx_img = googleUser.img;
       usuario.bl_google = true;
       usuario.fc_lastlogin = new Date();
       usuario.fc_createdat = new Date();
       usuario.id_role = 'USER_ROLE';
 
+      usuario.save().then(userSaved => {
 
-      usuario.save((err, usuarioDB) => {
-
-        var token = Token.getJwtToken({ usuario: usuarioDB })
+        var token = Token.getJwtToken({ usuario: userDB })
 
         res.status(200).json({
           ok: true,
+          msg: 'Usuario creado y logueado correctamente',
           token: token,
-          msg: { message: "OK LOGUEADO " },
           usuario,
-          // menu: obtenerMenu(usuarioDB.id_role)
+          menu: obtenerMenu(userSaved.id_role)
         });
-      });
+
+      }).catch((err) => {
+
+        res.status(500).json({
+          ok: false,
+          msg: 'Error al guardar el usuario de Google',
+          err
+        });
+      })
     }
-  });
+  }).catch((err)=> {
+
+      res.status(500).json({
+        ok: false,
+        msg: "Error al buscar usuario",
+        error: err
+      });
+
+    })
 }
 
 function loginUser(req: Request, res: Response) {
 
   var body = req.body;
   User.findOne({ tx_email: body.tx_email })
-    .populate({ path: 'id_company' })
+    .populate('id_company')
     .populate({ path: 'id_skills', select: 'cd_skill tx_skill' })
     .then(usuarioDB => {
 
@@ -398,6 +253,7 @@ function loginUser(req: Request, res: Response) {
       usuarioDB.save().then(() => {
 
         usuarioDB.tx_password = ":)";
+
         res.status(200).json({
           ok: true,
           msg: "Login post recibido.",
@@ -434,7 +290,7 @@ function obtenerMenu(id_role: string) {
   if ((id_role === "ASSISTANT_ROLE") || (id_role === "USER_ROLE")) {
     menu.push({
       titulo: "Asistente",
-      icon: "mdi mdi-settings",
+      icon: "headset_mic",
       submenu: [
         { titulo: "Home", url: "/assistant/home", icon: "home" },
         { titulo: "Dashboard", url: "/assistant/dashboard", icon: "dashboard" },
@@ -443,19 +299,20 @@ function obtenerMenu(id_role: string) {
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
 
-
   if (id_role === "USER_ROLE") {
     menu.push({
       titulo: "Usuario",
-      icon: "mdi mdi-settings",
+      icon: "verified_user",
       submenu: [
-        { titulo: "Home", url: "/user/home", icon: "home_work" },
+        { titulo: "Home", url: "/user/home", icon: "home" },
         { titulo: "Mi Perfil", url: "/user/profile", icon: "face" },
+        { titulo: "Empresas", url: "/user/companies", icon: "store" },
         { titulo: "Asistentes", url: "/user/assistants", icon: "supervised_user_circle" },
         { titulo: "Escritorios", url: "/user/desktops", icon: "exit_to_app" },
         { titulo: "Skills", url: "/user/skills", icon: "playlist_add_check" },
         { titulo: "Turnos", url: "/user/tickets", icon: "bookmark" },
         { titulo: "Dashboard", url: "/user/dashboard", icon: "dashboard" },
+
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
@@ -463,7 +320,7 @@ function obtenerMenu(id_role: string) {
   if (id_role === "ADMIN_ROLE") {
     menu.push({
       titulo: "Administrador",
-      icon: "mdi mdi-settings",
+      icon: "face",
       submenu: [
         { titulo: "Usuarios", url: "/admin/users", icon: "mdi mdi-account-multiple-plus" },
         { titulo: "Empresas", url: "/admin/company", icon: "mdi mdi-city" },
@@ -478,12 +335,10 @@ function obtenerMenu(id_role: string) {
   return menu;
 }
 
+
 export = {
-  registerUser,
-  readUser,
-  updateUser,
-  deleteUser,
-  checkCompanyExists,
+  createUser,
+  attachCompany,
   checkEmailExists,
   updateToken,
   loginGoogle,

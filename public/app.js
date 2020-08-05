@@ -17,9 +17,6 @@ function getPublicKey () {
     .then(res => res.arrayBuffer())
     .then(key => new Uint8Array(key))
 }
-getPublicKey().then(data=>{
-  console.log(data)
-})
 
 // cambia el estado del botón de suscripción
 function verificaSuscripcion (activadas) {
@@ -32,24 +29,22 @@ function verificaSuscripcion (activadas) {
   }
 }
 
+// click en el botón de suscripción, el browser solicita permiso
 btnDesactivadas.addEventListener('click', function () {
   if (!swReg) return console.log('No hay registro de SW')
   getPublicKey().then(key => {
-    console.log('KEYY', key)
     swReg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: key
       })
       .then(res => res.toJSON())
       .then(suscripcion => {
-        console.log(suscripcion)
         fetch('/n/subscribe', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(suscripcion)
         })
         .then( resp => {
-          console.log(resp);
           verificaSuscripcion(resp.ok);
          })
         .catch( cancelarSuscripcon  )
@@ -60,6 +55,8 @@ btnDesactivadas.addEventListener('click', function () {
 
 // cancel subscription
 function cancelarSuscripcon(){
+  // Como se hace swReg.pushManager.subscribe() pareciera que lo que tenemos que hacer es un 
+  // swReg.pushManager.unsubscribe() pero no, no funciona así, no funciona como un observable de RXJS. 
   swReg.pushManager.getSubscription().then( subs => {
       subs.unsubscribe()
       .then(()=> verificaSuscripcion(false));

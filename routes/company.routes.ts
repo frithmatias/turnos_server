@@ -9,8 +9,13 @@ import CompanyController from '../controllers/company.controller';
 // ROUTES
 const companyRoutes = Router();
 
-companyRoutes.post('/updatecompany', mdAuth.verificaToken, CompanyController.updateCompany);
+companyRoutes.post('/create', mdAuth.verificaToken, CompanyController.createCompany);
+companyRoutes.post('/update', mdAuth.verificaToken, CompanyController.updateCompany);
+companyRoutes.get('/readcompanies/:idUser', CompanyController.readCompanies);
 companyRoutes.get('/readcompany/:idCompany', CompanyController.readCompany);
 companyRoutes.get('/findcompany/:pattern', CompanyController.findCompany);
+companyRoutes.post('/checkcompanyexists', CompanyController.checkCompanyExists);
+companyRoutes.delete('/deletecompany/:idCompany', CompanyController.deleteCompany);
+
 
 export default companyRoutes;
