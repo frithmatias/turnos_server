@@ -15,25 +15,22 @@ import skillRoutes from './routes/skill.routes';
 import desktopRoutes from './routes/desktop.routes';
 import assistantRoutes from './routes/assistant.routes';
 import notificationRoutes from './routes/notification.routes';
-
-
-// si en router.ts lo explorto de la siguiente manera
-// const router = Router();
-// export default router;
-// puedo usar la importacion sin llaves
-// import router from "./routes/router";
-
-// si en cambio lo exporto de la siguiente manera
-// export const router = Router();
-// tengo que usar la importacion con llaves
-// import { router } from "./routes/router";
 import environment from './global/environment';
-// Patron SINGLETON, es una configuración adicional a mi clase Server para asegurarme de tener
-// una UNICA instancia del servidor de socktes como de todas las propiedades de mi clase Server.
+
+// SINGLETON
 // const server = new Server();
 const server = Server.instance; // obtenemos una nueva instancia de forma estática
 
-
+// force ssl
+server.app.use(function (req, res, next) {
+    let hostname = req.headers?.host?.split(':')[0] // localhost
+	
+	if(req.protocol === 'http' && hostname !== 'localhost') {
+        res.redirect('https://' + req.headers.host + req.url);
+    } else {
+		next()
+	}
+});
 
 const publicPath = path.resolve(__dirname, '../public');
 server.app.use(express.static(publicPath));

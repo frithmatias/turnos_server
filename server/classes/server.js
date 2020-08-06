@@ -19,6 +19,7 @@ class Server {
     constructor() {
         this.app = express_1.default();
         this.port = environment_1.default.SERVER_PORT;
+        this.app.enable('trust proxy'); // sin esta configuracion req.protocol detecta siempre http
         // le enviamos la confiugarccion de la app de express.
         this.httpServer = new http_1.default.Server(this.app);
         // this.io = socketIO( this.app ); // no puedo usar el server http de express directamente uso httpServer

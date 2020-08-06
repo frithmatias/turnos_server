@@ -19,20 +19,21 @@ const skill_routes_1 = __importDefault(require("./routes/skill.routes"));
 const desktop_routes_1 = __importDefault(require("./routes/desktop.routes"));
 const assistant_routes_1 = __importDefault(require("./routes/assistant.routes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
-// si en router.ts lo explorto de la siguiente manera
-// const router = Router();
-// export default router;
-// puedo usar la importacion sin llaves
-// import router from "./routes/router";
-// si en cambio lo exporto de la siguiente manera
-// export const router = Router();
-// tengo que usar la importacion con llaves
-// import { router } from "./routes/router";
 const environment_1 = __importDefault(require("./global/environment"));
-// Patron SINGLETON, es una configuración adicional a mi clase Server para asegurarme de tener
-// una UNICA instancia del servidor de socktes como de todas las propiedades de mi clase Server.
+// SINGLETON
 // const server = new Server();
 const server = server_1.default.instance; // obtenemos una nueva instancia de forma estática
+// force ssl
+server.app.use(function (req, res, next) {
+    var _a, _b;
+    let hostname = (_b = (_a = req.headers) === null || _a === void 0 ? void 0 : _a.host) === null || _b === void 0 ? void 0 : _b.split(':')[0]; // localhost
+    if (req.protocol === 'http' && hostname !== 'localhost') {
+        res.redirect('https://' + req.headers.host + req.url);
+    }
+    else {
+        next();
+    }
+});
 const publicPath = path_1.default.resolve(__dirname, '../public');
 server.app.use(express_1.default.static(publicPath));
 // Lo que reciba por el body, lo toma y lo convierte en un objeto de JavaScript
