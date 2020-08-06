@@ -18,13 +18,13 @@ self.addEventListener('install', e => {
       '/offline.html',
       '/manifest.json',
       '/4.affdce382e8924eb57cf.js',
-      '/5.04b5939df60e3562af23.js',
+      '/5.ed30718bd3e8060312ab.js',
       '/6.269081bb6f1a5fd72c1e.js',
-      '/7.b6ae8b3e26f7fbda9c80.js',
-      '/main.58edc351fcb460ab5ff5.js',
+      '/7.fc34191dc26331d0a897.js',
+      '/main.c70c6cd24d93297fecda.js',
       '/polyfills.ac27f9db7182d098bf2e.js',
-      '/runtime.d3554a9fdfc8e405c617.js',
-      '/styles.ab146d6d7d27789c4406.css'
+      '/runtime.07aa485f3aa7d4644c9e.js',
+      '/styles.47142339f0ef8f29ec91.css'
     ])
   })
 
