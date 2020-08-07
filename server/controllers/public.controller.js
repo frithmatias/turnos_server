@@ -19,7 +19,7 @@ function getClientData(req, res) {
     }).catch(() => {
         return res.status(500).json({
             ok: false,
-            msg: "Error al buscar el usuario",
+            msg: "Error al buscar el user",
             company: null
         });
     });

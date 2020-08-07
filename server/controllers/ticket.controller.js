@@ -106,23 +106,6 @@ function takeTicket(req, res) {
             });
         }
         if (assistantDB) {
-            // Cierro, Si existe, el ticket recientemente atendido por el escritorio.
-            ticket_model_1.Ticket.findOne({ id_company: assistantDB.id_company, id_desk: idDesk, tm_end: null }).then(ticketDB => {
-                if (ticketDB) {
-                    ticketDB.tm_end = +new Date().getTime();
-                    ticketDB.save().then(() => {
-                        // actualiza sólo la pantalla del cliente con el turno finalizado
-                        // server.io.to(ticketDB.id_socket).emit('actualizar-pantalla');
-                        server.io.to(assistantDB.id_company).emit('actualizar-pantalla');
-                    }).catch(() => {
-                        return res.status(500).json({
-                            ok: false,
-                            msg: 'Ocurrio un error al cerrar el ticket anterior.',
-                            ticket: ticketDB
-                        });
-                    });
-                }
-            });
             // Busco un nuevo ticket para atender
             ticket_model_1.Ticket.findOne({
                 id_company: assistantDB.id_company,

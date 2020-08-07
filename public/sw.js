@@ -17,13 +17,13 @@ self.addEventListener('install', e => {
       '/index.html',
       '/manifest.json',
       '/4.affdce382e8924eb57cf.js',
-      '/5.ed30718bd3e8060312ab.js',
-      '/6.269081bb6f1a5fd72c1e.js',
-      '/7.fc34191dc26331d0a897.js',
-      '/main.c70c6cd24d93297fecda.js',
+      '/5.406046f5beadeda21315.js',
+      '/6.816c9901190cb5a96ffe.js',
+      '/7.604395a761ba46371784.js',
+      '/main.30ce751fe88243fb26f0.js',
       '/polyfills.ac27f9db7182d098bf2e.js',
-      '/runtime.07aa485f3aa7d4644c9e.js',
-      '/styles.47142339f0ef8f29ec91.css'
+      '/runtime.3c43ccfab2a60e7af510.js',
+      '/styles.0d914feea7f948057be9.css'
     ])
   }).catch(()=>{
     console.log('error al crear la app shell');

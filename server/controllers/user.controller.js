@@ -40,7 +40,7 @@ function createUser(req, res) {
     }).catch((err) => {
         return res.status(400).json({
             ok: false,
-            msg: "Error al guardar el usuario.",
+            msg: "Error al guardar el user.",
             errors: err
         });
     });
@@ -53,13 +53,13 @@ function attachCompany(req, res) {
         .then(userUpdated => {
         return res.status(200).json({
             ok: true,
-            msg: 'La empresa se asigno al usuario correctamente',
+            msg: 'La empresa se asigno al user correctamente',
             user: userUpdated
         });
     }).catch(() => {
         return res.status(500).json({
             ok: true,
-            msg: 'No se pudo asignar la empresa al usuario',
+            msg: 'No se pudo asignar la empresa al user',
             user: null
         });
     });
@@ -85,10 +85,10 @@ function checkEmailExists(req, res) {
     });
 }
 function updateToken(req, res) {
-    var token = token_1.default.getJwtToken({ usuario: req.usuario });
+    var token = token_1.default.getJwtToken({ user: req.user });
     res.status(200).json({
         ok: true,
-        usuario: req.usuario,
+        user: req.user,
         newtoken: token
     });
 }
@@ -122,14 +122,14 @@ function loginGoogle(req, res) {
         if (!googleUser) {
             return res.status(500).json({
                 ok: false,
-                message: "No se pudo obtener el usuario de Google.",
+                message: "No se pudo obtener el user de Google.",
                 err: null
             });
         }
         user_model_1.User.findOne({ tx_email: googleUser.email })
             .populate('id_company')
             .then(userDB => {
-            if (userDB) { // el usuario existe, intenta loguearse
+            if (userDB) { // el user existe, intenta loguearse
                 if (userDB.bl_google === false) {
                     return res.status(400).json({
                         ok: false,
@@ -139,7 +139,7 @@ function loginGoogle(req, res) {
                 }
                 else {
                     // Google SignIn -> new token
-                    var token = token_1.default.getJwtToken({ usuario: userDB });
+                    var token = token_1.default.getJwtToken({ user: userDB });
                     userDB.updateOne({ fc_lastlogin: +new Date().getTime() })
                         .then(userSaved => {
                         userSaved.tx_password = ":)";
@@ -147,41 +147,43 @@ function loginGoogle(req, res) {
                             ok: true,
                             msg: 'Login exitoso',
                             token: token,
-                            usuario: userDB,
-                            menu: obtenerMenu(userDB.id_role)
+                            user: userDB,
+                            menu: obtenerMenu(userDB.id_role),
+                            home: '/user/home'
                         });
                     }).catch((err) => {
                         return res.status(400).json({
                             ok: false,
-                            msg: 'Error al loguear el usuario de Google',
+                            msg: 'Error al loguear el user de Google',
                             err
                         });
                     });
                 }
             }
-            else { // el usuario no existe, hay que crearlo.
-                var usuario = new user_model_1.User();
-                usuario.tx_email = googleUser.email;
-                usuario.tx_name = googleUser.name;
-                usuario.tx_password = ':)';
-                usuario.tx_img = googleUser.img;
-                usuario.bl_google = true;
-                usuario.fc_lastlogin = new Date();
-                usuario.fc_createdat = new Date();
-                usuario.id_role = 'USER_ROLE';
-                usuario.save().then(userSaved => {
-                    var token = token_1.default.getJwtToken({ usuario: userDB });
+            else { // el user no existe, hay que crearlo.
+                var user = new user_model_1.User();
+                user.tx_email = googleUser.email;
+                user.tx_name = googleUser.name;
+                user.tx_password = ':)';
+                user.tx_img = googleUser.img;
+                user.bl_google = true;
+                user.fc_lastlogin = new Date();
+                user.fc_createdat = new Date();
+                user.id_role = 'USER_ROLE';
+                user.save().then(userSaved => {
+                    var token = token_1.default.getJwtToken({ user: userDB });
                     res.status(200).json({
                         ok: true,
                         msg: 'Usuario creado y logueado correctamente',
                         token: token,
-                        usuario,
-                        menu: obtenerMenu(userSaved.id_role)
+                        user,
+                        menu: obtenerMenu(userSaved.id_role),
+                        home: '/user/home'
                     });
                 }).catch((err) => {
                     res.status(500).json({
                         ok: false,
-                        msg: 'Error al guardar el usuario de Google',
+                        msg: 'Error al guardar el user de Google',
                         err
                     });
                 });
@@ -189,7 +191,7 @@ function loginGoogle(req, res) {
         }).catch((err) => {
             res.status(500).json({
                 ok: false,
-                msg: "Error al buscar usuario",
+                msg: "Error al buscar user",
                 error: err
             });
         });
@@ -200,32 +202,34 @@ function loginUser(req, res) {
     user_model_1.User.findOne({ tx_email: body.tx_email })
         .populate('id_company')
         .populate({ path: 'id_skills', select: 'cd_skill tx_skill' })
-        .then(usuarioDB => {
-        if (!usuarioDB) {
+        .then(userDB => {
+        if (!userDB) {
             return res.status(400).json({
                 ok: false,
-                msg: "Credenciales incorrectas1"
+                msg: "Usuaro o Contraseña incorrecta."
             });
         }
-        if (!bcrypt_1.default.compareSync(body.tx_password, usuarioDB.tx_password)) {
+        if (!bcrypt_1.default.compareSync(body.tx_password, userDB.tx_password)) {
             return res.status(400).json({
                 ok: false,
-                msg: "Credenciales incorrectas2"
+                msg: "Contraseña o usuario incorrecto."
             });
         }
-        // Si llego hasta acá, el usuario y la contraseña son correctas, creo el token
-        var token = token_1.default.getJwtToken({ usuario: usuarioDB });
-        usuarioDB.fc_lastlogin = new Date();
-        usuarioDB.save().then(() => {
-            usuarioDB.tx_password = ":)";
+        // Si llego hasta acá, el user y la contraseña son correctas, creo el token
+        var token = token_1.default.getJwtToken({ user: userDB });
+        userDB.fc_lastlogin = new Date();
+        userDB.save().then(() => {
+            userDB.tx_password = ":)";
+            let home = userDB.id_role === 'USER_ROLE' ? '/user/home' : '/assistant/home';
             res.status(200).json({
                 ok: true,
                 msg: "Login post recibido.",
                 token: token,
                 body: body,
-                id: usuarioDB._id,
-                usuario: usuarioDB,
-                menu: obtenerMenu(usuarioDB.id_role)
+                id: userDB._id,
+                user: userDB,
+                menu: obtenerMenu(userDB.id_role),
+                home
             });
         }).catch((err) => {
             return res.status(500).json({
@@ -237,7 +241,7 @@ function loginUser(req, res) {
     }).catch((err) => {
         return res.status(500).json({
             ok: false,
-            msg: "Error al buscar un usuario",
+            msg: "Error al buscar un user",
             errors: err
         });
     });
@@ -250,7 +254,7 @@ function obtenerMenu(id_role) {
             icon: "headset_mic",
             submenu: [
                 { titulo: "Home", url: "/assistant/home", icon: "home" },
-                { titulo: "Dashboard", url: "/assistant/dashboard", icon: "dashboard" },
+                { titulo: "Dashboard", url: "/assistant/dashboard", icon: "insights" },
                 { titulo: "Escritorio", url: "/assistant/desktop", icon: "desktop_windows" },
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
@@ -258,16 +262,16 @@ function obtenerMenu(id_role) {
     if (id_role === "USER_ROLE") {
         menu.push({
             titulo: "Usuario",
-            icon: "verified_user",
+            icon: "local_police",
             submenu: [
                 { titulo: "Home", url: "/user/home", icon: "home" },
                 { titulo: "Mi Perfil", url: "/user/profile", icon: "face" },
-                { titulo: "Empresas", url: "/user/companies", icon: "store" },
-                { titulo: "Asistentes", url: "/user/assistants", icon: "supervised_user_circle" },
-                { titulo: "Escritorios", url: "/user/desktops", icon: "exit_to_app" },
+                { titulo: "Comercios", url: "/user/companies", icon: "store" },
+                { titulo: "Asistentes", url: "/user/assistants", icon: "headset_mic" },
+                { titulo: "Escritorios", url: "/user/desktops", icon: "important_devices" },
                 { titulo: "Skills", url: "/user/skills", icon: "playlist_add_check" },
                 { titulo: "Turnos", url: "/user/tickets", icon: "bookmark" },
-                { titulo: "Dashboard", url: "/user/dashboard", icon: "dashboard" },
+                { titulo: "Dashboard", url: "/user/dashboard", icon: "insights" },
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }

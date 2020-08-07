@@ -59,7 +59,7 @@ function readCompany(req: Request, res: Response) {
   }).catch(() => {
     return res.status(500).json({
       ok: false,
-      msg: "Error al buscar el usuario",
+      msg: "Error al buscar el user",
       company: null
     });
   })
@@ -73,7 +73,7 @@ function readCompanies(req: Request, res: Response) {
     if (!companiesDB) {
       return res.status(400).json({
         ok: false,
-        msg: "No existen empresas asociadas al usuario",
+        msg: "No existen empresas asociadas al user",
         companies: null
       });
     }
@@ -87,7 +87,7 @@ function readCompanies(req: Request, res: Response) {
   }).catch(() => {
     return res.status(500).json({
       ok: false,
-      msg: "Error al buscar empresas asociadas a un usuario",
+      msg: "Error al buscar empresas asociadas a un user",
       companies: null
     });
   })
@@ -117,7 +117,7 @@ function findCompany(req: Request, res: Response) {
   }).catch(() => {
     return res.status(500).json({
       ok: false,
-      msg: "Error al buscar el usuario",
+      msg: "Error al buscar el user",
       companies: null
     });
   })

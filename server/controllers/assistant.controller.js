@@ -57,13 +57,13 @@ function readAssistantsUser(req, res) {
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al consultar los asistentes para las empresas del usuario',
+                msg: 'Error al consultar los asistentes para las empresas del user',
                 assistants: null
             });
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al consultar las empresas del usuario',
+                msg: 'Error al consultar las empresas del user',
                 assistants: null
             });
         });
@@ -88,7 +88,7 @@ function readAssistants(req, res) {
     }).catch(() => {
         return res.status(500).json({
             ok: false,
-            msg: 'Error al consultar los asistentes para las empresas del usuario',
+            msg: 'Error al consultar los asistentes para las empresas del user',
             assistants: null
         });
     });

@@ -11,7 +11,7 @@ let verificaToken = (req: any, res: Response, next: NextFunction) => {
         .catch((err) => {
             res.json({
                 ok: false,
-                err: 'Token incorrecto'
+                msg: 'Token incorrecto'
             });
         });
 };

@@ -13,7 +13,7 @@ let verificaToken = (req, res, next) => {
         .catch((err) => {
         res.json({
             ok: false,
-            err: 'Token incorrecto'
+            msg: 'Token incorrecto'
         });
     });
 };

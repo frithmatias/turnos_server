@@ -51,7 +51,7 @@ function readSkills(req: Request, res: Response) {
     }).catch(() => {
         return res.status(500).json({
             ok: false,
-            msg: 'Error al consultar los skills para las empresas del usuario',
+            msg: 'Error al consultar los skills para las empresas del user',
             skills: null
         })
     })
@@ -79,13 +79,13 @@ function readSkillsUser(req: Request, res: Response) {
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al consultar los skills para las empresas del usuario',
+                msg: 'Error al consultar los skills para las empresas del user',
                 skills: null
             })
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al consultar las empresas del usuario',
+                msg: 'Error al consultar las empresas del user',
                 skills: null
             })
         })

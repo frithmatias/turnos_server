@@ -3,7 +3,7 @@ import { Schema, model, Document } from 'mongoose';
 const desktopSchema = new Schema({
     id_company: {type: String, required: [true, 'El id_company es necesario']},
     cd_desktop: {type: String, required: [true, 'El cd_desktop es necesario']},
-    id_assistant: {type: String, required: false},
+    id_assistant: {type: String, ref: 'User', required: false},
     
 },{ collection: "desktops" })
 

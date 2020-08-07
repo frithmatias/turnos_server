@@ -53,13 +53,13 @@ function readDesktopsUser(req: Request, res: Response) {
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al consultar los escritorios para las empresas del usuario',
+                msg: 'Error al consultar los escritorios para las empresas del user',
                 desktops: null
             })
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al consultar las empresas del usuario',
+                msg: 'Error al consultar las empresas del user',
                 desktops: null
             })
         })
@@ -69,7 +69,7 @@ function readDesktopsUser(req: Request, res: Response) {
 function readDesktops(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
 
-    Desktop.find({ id_company: idCompany }).populate('id_company').then(desktopsDB => {
+    Desktop.find({ id_company: idCompany }).populate('id_assistant').then(desktopsDB => {
         if (!desktopsDB) {
             return res.status(400).json({
                 ok: false,
@@ -85,7 +85,7 @@ function readDesktops(req: Request, res: Response) {
     }).catch(() => {
         return res.status(500).json({
             ok: false,
-            msg: 'Error al consultar los escritorios para las empresas del usuario',
+            msg: 'Error al consultar los escritorios para las empresas del user',
             desktops: null
         })
 
