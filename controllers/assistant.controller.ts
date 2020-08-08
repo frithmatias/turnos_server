@@ -26,13 +26,13 @@ function createAssistant(req: Request, res: Response) {
         res.status(200).json({
             ok: true,
             msg: 'Usuario guardado correctamente',
-            assistant: assistantSaved
+            user: assistantSaved
         })
     }).catch((err) => {
         res.status(400).json({
             ok: false,
             msg: 'El mail ya esta registrado',
-            assistant: null
+            user: null
         });
     });
 }
@@ -44,30 +44,30 @@ function readAssistantsUser(req: Request, res: Response) {
     }).then(resp => {
         User
             .find({ $or: [{ '_id': idUser }, { id_company: { $in: resp } }] })
-            .populate('id_company').then(assistantsDB => {
-                if (!assistantsDB) {
+            .populate('id_company').then(usersDB => {
+                if (!usersDB) {
                     return res.status(400).json({
                         ok: false,
                         msg: 'No existen asistentes para la empresa seleccionada',
-                        assistants: null
+                        users: null
                     })
                 }
                 return res.status(200).json({
                     ok: true,
                     msg: 'Asistentes obtenidos correctamente',
-                    assistants: assistantsDB
+                    users: usersDB
                 })
             }).catch(() => {
                 return res.status(500).json({
                     ok: false,
                     msg: 'Error al consultar los asistentes para las empresas del user',
-                    assistants: null
+                    users: null
                 })
             }).catch(() => {
                 return res.status(500).json({
                     ok: false,
                     msg: 'Error al consultar las empresas del user',
-                    assistants: null
+                    users: null
                 })
             })
     })
@@ -78,24 +78,24 @@ function readAssistants(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
 
     User.find({ id_company: idCompany })
-        .populate('id_company').then(assistantsDB => {
-            if (!assistantsDB) {
+        .populate('id_company').then(usersDB => {
+            if (!usersDB) {
                 return res.status(400).json({
                     ok: false,
                     msg: 'No existen asistentes para la empresa seleccionada',
-                    assistants: null
+                    users: null
                 })
             }
             return res.status(200).json({
                 ok: true,
                 msg: 'Asistentes obtenidos correctamente',
-                assistants: assistantsDB
+                users: usersDB
             })
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
                 msg: 'Error al consultar los asistentes para las empresas del user',
-                assistants: null
+                users: null
             })
         })
 
@@ -107,7 +107,7 @@ function updateAssistant(req: Request, res: Response) {
 
     var body = req.body;
 
-    let assistant: any = {
+    let user: any = {
         id_role: body.id_role,
         id_company: body.id_company,
         tx_name: body.tx_name,
@@ -115,19 +115,22 @@ function updateAssistant(req: Request, res: Response) {
         id_skills: body.id_skills
     }
 
-    if (body.tx_password !== '******') { assistant.tx_password = bcrypt.hashSync(body.tx_password, 10); }
+    if (body.tx_password !== '******') { user.tx_password = bcrypt.hashSync(body.tx_password, 10); }
 
-    User.findByIdAndUpdate(body._id, assistant).then(assistantDB => {
+    User.findByIdAndUpdate(body._id, user, {new: true})
+    .populate('id_skills')
+    .populate('id_company')
+    .then(userDB => {
         return res.status(200).json({
             ok: true,
             msg: 'Se actualizo el asistente correctamente',
-            assistant: assistantDB
+            user: userDB
         })
     }).catch(() => {
         return res.status(400).json({
             ok: false,
             msg: 'Ocurrio un error al actualizar el asistente',
-            assistant: null
+            user: null
         })
     })
 }
@@ -138,13 +141,13 @@ function deleteAssistant(req: Request, res: Response) {
         res.status(200).json({
             ok: true,
             msg: 'Usuario eliminado correctamente',
-            assistant: assistantDeleted
+            user: assistantDeleted
         })
     }).catch(() => {
         res.status(400).json({
             ok: false,
             msg: 'Error al eliminar al asistente',
-            assistant: null
+            user: null
         })
     })
 }

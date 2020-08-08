@@ -110,8 +110,8 @@ function verify(token) {
 }
 function loginGoogle(req, res) {
     return __awaiter(this, void 0, void 0, function* () {
-        var token = req.body.token;
-        var googleUser = yield verify(token) // devuelve una promesa
+        var gtoken = req.body.gtoken;
+        var googleUser = yield verify(gtoken) // devuelve una promesa
             .catch(err => {
             res.status(403).json({
                 ok: false,
@@ -128,6 +128,7 @@ function loginGoogle(req, res) {
         }
         user_model_1.User.findOne({ tx_email: googleUser.email })
             .populate('id_company')
+            .populate('id_skills')
             .then(userDB => {
             if (userDB) { // el user existe, intenta loguearse
                 if (userDB.bl_google === false) {

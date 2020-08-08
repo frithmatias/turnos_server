@@ -120,8 +120,8 @@ async function verify(token: string) {
 }
 
 async function loginGoogle(req: Request, res: Response) {
-  var token = req.body.token;
-  var googleUser: any = await verify(token) // devuelve una promesa
+  var gtoken = req.body.gtoken;
+  var googleUser: any = await verify(gtoken) // devuelve una promesa
     .catch(err => {
       res.status(403).json({
         ok: false,
@@ -141,6 +141,7 @@ async function loginGoogle(req: Request, res: Response) {
 
   User.findOne({ tx_email: googleUser.email })
   .populate('id_company')
+  .populate('id_skills')
   .then(userDB => {
 
     if (userDB) {  // el user existe, intenta loguearse
