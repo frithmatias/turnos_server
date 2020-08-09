@@ -50,6 +50,7 @@ function attachCompany(req, res) {
     let idUser = req.params.idUser;
     user_model_1.User.findByIdAndUpdate(idUser, { 'id_company': company._id }, { new: true })
         .populate('id_company')
+        .populate('id_skills')
         .then(userUpdated => {
         return res.status(200).json({
             ok: true,

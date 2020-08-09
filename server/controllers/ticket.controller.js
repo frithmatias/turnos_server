@@ -225,17 +225,17 @@ function endTicket(req, res) {
 function getTickets(req, res) {
     const idCompany = req.params.id_company;
     ticket_model_1.Ticket.find({ id_company: idCompany }).then((tickets) => {
-        if (!tickets) {
-            return res.status(400).json({
-                ok: false,
-                msg: "No existen tickets para la empresa solicitada.",
-                tickets: null
+        if (tickets.length > 0) {
+            return res.status(200).json({
+                ok: true,
+                msg: "Se encontraron tickets para la empresa solicitada.",
+                tickets
             });
         }
-        return res.status(200).json({
-            ok: true,
-            msg: "Se encontraron tickets para la empresa solicitada.",
-            tickets
+        return res.status(400).json({
+            ok: false,
+            msg: "No existen tickets para la empresa solicitada.",
+            tickets: null
         });
     }).catch((err) => {
         return res.status(500).json({

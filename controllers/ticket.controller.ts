@@ -223,12 +223,12 @@ function cancelTicket(req: Request, res: Response) {
 
 function releaseTicket(req: Request, res: Response) {
 	const idTicket = req.body.idTicket;
-	Ticket.findByIdAndUpdate(idTicket, { 
+	Ticket.findByIdAndUpdate(idTicket, {
 		tm_att: null,
 		id_desk: null,
 		id_socket_desk: null,
 		id_assistant: null,
-		cd_desk: null 
+		cd_desk: null
 	}).then(ticketReleased => {
 		if (ticketReleased?.id_company) { server.io.to(ticketReleased.id_company).emit('actualizar-pantalla'); }
 		return res.status(200).json({
@@ -266,20 +266,21 @@ function endTicket(req: Request, res: Response) {
 function getTickets(req: Request, res: Response) {
 	const idCompany = req.params.id_company;
 	Ticket.find({ id_company: idCompany }).then((tickets) => {
-
-		if (!tickets) {
-			return res.status(400).json({
-				ok: false,
-				msg: "No existen tickets para la empresa solicitada.",
-				tickets: null
+		
+		if (tickets.length > 0) {
+			return res.status(200).json({
+				ok: true,
+				msg: "Se encontraron tickets para la empresa solicitada.",
+				tickets
 			});
 		}
 
-		return res.status(200).json({
-			ok: true,
-			msg: "Se encontraron tickets para la empresa solicitada.",
-			tickets
+		return res.status(400).json({
+			ok: false,
+			msg: "No existen tickets para la empresa solicitada.",
+			tickets: null
 		});
+
 	}).catch((err) => {
 		return res.status(500).json({
 			ok: false,
@@ -309,7 +310,7 @@ function updateSocket(req: Request, res: Response) {
 		switch (oldSocket) {
 			case ticketDB.id_socket: // actualizo el socket del cliente
 				ticketDB.id_socket = newSocket;
-				if(ticketDB.id_socket_desk) { requestUpdateTo = ticketDB.id_socket_desk; }
+				if (ticketDB.id_socket_desk) { requestUpdateTo = ticketDB.id_socket_desk; }
 				break;
 			case ticketDB.id_socket_desk: // actualizo el socket del asistente
 				ticketDB.id_socket_desk = newSocket
