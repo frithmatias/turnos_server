@@ -5,7 +5,7 @@ const statusSchema = new Schema({
     id_month: {type: Number, required: [true, 'El id_month es necesario']},
     id_year: {type: Number, required: [true, 'El id_year es necesario']},
     id_skill: {type: String, required: [true, 'El id_skill es necesario']},
-    id_ticket: {type: Number, required: [true, 'El id_ticket es necesario']},
+    cd_number: {type: Number, required: [true, 'El cd_number es necesario']},
 },{ collection: "status" })
 
 interface Status extends Document {
@@ -13,7 +13,7 @@ interface Status extends Document {
     id_month: number;
     id_year: number;
     id_skill: string;
-    id_ticket: number;
+    cd_number: number;
 }
 
-export const Status = model<Status>('Status', statusSchema);
+export const Status = model<Status>('SkillStat', statusSchema);

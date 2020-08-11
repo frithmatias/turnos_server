@@ -8,4 +8,4 @@ const statusSchema = new mongoose_1.Schema({
     id_skill: { type: String, required: [true, 'El id_skill es necesario'] },
     cd_number: { type: Number, required: [true, 'El cd_number es necesario'] },
 }, { collection: "status" });
-exports.Status = mongoose_1.model('SkillNumbers', statusSchema);
+exports.Status = mongoose_1.model('SkillStat', statusSchema);

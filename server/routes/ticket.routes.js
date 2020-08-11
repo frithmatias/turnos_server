@@ -11,7 +11,7 @@ const ticket_controller_1 = __importDefault(require("../controllers/ticket.contr
 // ROUTES 
 const ticketRoutes = express_1.Router();
 // public requests
-ticketRoutes.post('/nuevoticket', ticket_controller_1.default.createTicket);
+ticketRoutes.post('/createticket', ticket_controller_1.default.createTicket);
 ticketRoutes.get('/cancelticket/:idTicket', ticket_controller_1.default.cancelTicket);
 ticketRoutes.get('/gettickets/:id_company', ticket_controller_1.default.getTickets);
 ticketRoutes.put('/actualizarsocket', ticket_controller_1.default.updateSocket);
@@ -19,4 +19,5 @@ ticketRoutes.put('/actualizarsocket', ticket_controller_1.default.updateSocket);
 ticketRoutes.post('/taketicket', auth_1.default.verificaToken, ticket_controller_1.default.takeTicket);
 ticketRoutes.post('/releaseticket', auth_1.default.verificaToken, ticket_controller_1.default.releaseTicket);
 ticketRoutes.post('/endticket', auth_1.default.verificaToken, ticket_controller_1.default.endTicket);
+ticketRoutes.post('/reassignticket', auth_1.default.verificaToken, ticket_controller_1.default.reassignTicket);
 exports.default = ticketRoutes;
