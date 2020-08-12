@@ -1,6 +1,7 @@
 "use strict";
 const company_model_1 = require("../models/company.model");
 const contact_model_1 = require("../models/contact.model");
+const score_model_1 = require("../models/score.model");
 function getClientData(req, res) {
     var company = String(req.params.company);
     company_model_1.Company.findOne({ tx_company_name: company }).then(companyDB => {
@@ -45,7 +46,43 @@ function postContact(req, res) {
         });
     });
 }
+function postScore(req, res) {
+    let scores = req.body;
+    score_model_1.Score.insertMany(scores).then(scoresSaved => {
+        if (!scoresSaved) {
+            return res.status(400).json({
+                ok: false,
+                msg: 'No se pudieron guardar las calificaciones',
+                scores: null
+            });
+        }
+        return res.status(200).json({
+            ok: true,
+            msg: 'Las calificaciones fueron guardadas con éxito',
+            socres: scoresSaved
+        });
+    });
+    // contact.tx_type = req.body.tx_type;
+    // contact.tx_message = req.body.tx_message;
+    // contact.tx_name = req.body.tx_name;
+    // contact.tx_email = req.body.tx_email;
+    // contact.tx_phone = req.body.tx_phone;
+    // contact.save().then(contactSaved => {
+    //   return res.status(200).json({
+    //     ok: true,
+    //     msg: 'Contacto guardado correctamente',
+    //     contact: contactSaved._id
+    //   })
+    // }).catch(() => {
+    //   return res.status(400).json({
+    //     ok: false,
+    //     msg: 'Error al guardar el contacto',
+    //     contact: null
+    //   })
+    // })
+}
 module.exports = {
     getClientData,
-    postContact
+    postContact,
+    postScore
 };

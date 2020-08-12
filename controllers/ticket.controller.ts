@@ -3,26 +3,27 @@ import Server from '../classes/server';
 
 // MODELS
 import { Ticket } from '../models/ticket.model';
-import { Status } from '../models/skillstat.model';
+import { Status } from '../models/status.model';
 import { User } from '../models/user.model';
 import { Skill } from '../models/skill.model';
+import { Desktop } from '../models/desktop.model';
 
 const server = Server.instance; // singleton
 
 
 function createTicket(req: Request, res: Response) {
-	
-	const { idSkill, idSocket } = req.body;
-	
+
+	const { idSkill, idSocket, blPriority } = req.body;
+
 	const idDay = + new Date().getDate();
 	const idMonth = + new Date().getMonth() + 1;
 	const idYear = + new Date().getFullYear();
-	
+
 	let cdNumber: number;
 
 	Skill.findById(idSkill).then(skillDB => {
 
-		if(!skillDB){
+		if (!skillDB) {
 			return res.status(400).json({
 				ok: false,
 				msg: 'No existe el skill solicitado',
@@ -36,10 +37,10 @@ function createTicket(req: Request, res: Response) {
 			id_year: idYear,
 			id_month: idMonth,
 			id_day: idDay
-		}, { $inc: { cd_number: 1 } }).then((statusUpdated) => {
+		}, { $inc: { cd_number: 1 } }).then((skillNextNumber) => {
 
-			if (!statusUpdated) {
-				// si no existe el primer turno lo crea
+			// si no existe el primer turno lo crea
+			if (!skillNextNumber) {
 
 				let newSkillStatus = new Status({
 					id_skill: idSkill,
@@ -60,15 +61,16 @@ function createTicket(req: Request, res: Response) {
 				cdNumber = newSkillStatus.cd_number;
 			}
 
-			if (statusUpdated) {
-				cdNumber = statusUpdated.cd_number;
+			if (skillNextNumber) {
+				cdNumber = skillNextNumber.cd_number;
 			}
 
 			let idCompany = skillDB.id_company;
 			// guardo el ticket
 			let ticket = new Ticket({
-				id_parent: null,
+				id_root: null,
 				id_child: null,
+				bl_priority: blPriority,
 				cd_number: cdNumber,
 				id_socket: idSocket,
 				id_socket_desk: null,
@@ -81,6 +83,7 @@ function createTicket(req: Request, res: Response) {
 				tm_end: null
 			})
 
+			ticket.id_root = ticket._id;
 			ticket.save().then((ticketSaved) => {
 
 				const server = Server.instance;
@@ -105,8 +108,8 @@ function createTicket(req: Request, res: Response) {
 					tm_att: null,
 					tm_end: null
 				}
-		
-				
+
+
 				res.status(201).json({
 					ok: true,
 					msg: "Ticket guardado correctamente.",
@@ -161,76 +164,96 @@ function getCountPending(idCompany: string) {
 function takeTicket(req: Request, res: Response) {
 
 	const server = Server.instance;
-	const { cdDesk, idDesk, idSocketDesk, idAssistant } = req.body;
+	const { idDesk, idSocketDesk, idAssistant } = req.body;
 
-	User.findById(idAssistant).then(assistantDB => {
+	Desktop.findById(idDesk).then(desktopDB => {
 
-		if (!assistantDB) {
+		if (!desktopDB) {
 			return res.status(400).json({
 				ok: false,
-				msg: 'No existe el asistente!',
+				msg: 'No existe el escritorio!',
 				assistant: null
 			});
 		}
 
-		if (assistantDB) {
+		User.findById(idAssistant).then(assistantDB => {
 
-			// Busco un nuevo ticket para atender
-			Ticket.findOne({
-				id_company: assistantDB.id_company,
-				id_skill: { $in: assistantDB.id_skills },
-				id_desk: null,
-				tm_end: null
-			}).then(ticketDB => {
+			if (!assistantDB) {
+				return res.status(400).json({
+					ok: false,
+					msg: 'No existe el asistente!',
+					assistant: null
+				});
+			}
 
-				if (!ticketDB) {
-					return res.status(200).json({
+			if (assistantDB) {
+
+				// Busco un nuevo ticket para atender
+				Ticket.findOne({
+					id_company: assistantDB.id_company,
+					id_skill: { $in: assistantDB.id_skills },
+					id_desk: null,
+					tm_end: null
+				})
+				.sort({bl_priority:-1, tm_start:1}) // priority true first
+				// .limit(1)
+				.then(ticketDB => {
+
+					if (!ticketDB) {
+						return res.status(200).json({
+							ok: false,
+							msg: 'No existen tickets pendientes.',
+							ticket: null
+						})
+					}
+
+					if (ticketDB) {
+
+						ticketDB.tm_att = + new Date().getTime();
+						ticketDB.id_desk = idDesk;
+						ticketDB.id_socket_desk = idSocketDesk;
+						ticketDB.id_assistant = idAssistant;
+						ticketDB.save().then(ticketSaved => {
+
+							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${desktopDB.cd_desktop} por ${assistantDB.tx_name} ` });
+							//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
+							if (ticketSaved?.id_company) { server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); }
+
+							return res.status(200).json({
+								ok: true,
+								msg: 'Ticket obtenido correctamente',
+								ticket: ticketDB
+							});
+
+						}).catch(() => {
+							return res.status(400).json({
+								ok: false,
+								msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
+								ticket: null
+							});
+						})
+
+					}
+
+				}).catch(() => {
+					return res.status(500).json({
 						ok: false,
-						msg: 'No existen tickets pendientes.',
+						msg: 'Error al consultar el ticket',
 						ticket: null
 					})
-				}
-
-				if (ticketDB) {
-
-					ticketDB.tm_att = + new Date().getTime();
-					ticketDB.id_desk = idDesk;
-					ticketDB.id_socket_desk = idSocketDesk;
-					ticketDB.id_assistant = idAssistant;
-					ticketDB.save().then(ticketSaved => {
-
-						server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${cdDesk} por ${assistantDB.tx_name} ` });
-						//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
-						if (ticketSaved?.id_company) { server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); }
-
-						return res.status(200).json({
-							ok: true,
-							msg: 'Ticket obtenido correctamente',
-							ticket: ticketDB
-						});
-
-					}).catch(() => {
-						return res.status(400).json({
-							ok: false,
-							msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
-							ticket: null
-						});
-					})
-
-				}
-
-			}).catch(() => {
-				return res.status(500).json({
-					ok: false,
-					msg: 'Error al consultar el ticket',
-					ticket: null
 				})
+			}
+		}).catch(() => {
+			return res.status(500).json({
+				ok: false,
+				msg: 'Error al consultar el asistente',
+				assistant: null
 			})
-		}
+		})
 	}).catch(() => {
 		return res.status(500).json({
 			ok: false,
-			msg: 'Error al consultar el asistente',
+			msg: 'Error al consultar el escritorio',
 			assistant: null
 		})
 	})
@@ -238,7 +261,7 @@ function takeTicket(req: Request, res: Response) {
 
 function cancelTicket(req: Request, res: Response) {
 	const idTicket = req.params.idTicket;
-	console.log(idTicket)
+
 	Ticket.findByIdAndUpdate(idTicket, { tm_end: + new Date().getTime() }).then((ticketCanceled) => {
 		return res.status(200).json({
 			ok: true,
@@ -263,7 +286,7 @@ function releaseTicket(req: Request, res: Response) {
 		id_socket_desk: null,
 		id_assistant: null,
 		tm_end: null
-	}, {new: true}).then(ticketReleased => {
+	}, { new: true }).then(ticketReleased => {
 		if (ticketReleased?.id_company) { server.io.to(ticketReleased.id_company).emit('actualizar-pantalla'); }
 		return res.status(200).json({
 			ok: true,
@@ -282,18 +305,18 @@ function releaseTicket(req: Request, res: Response) {
 function reassignTicket(req: Request, res: Response) {
 	// desvía un ticket de un skill a otro dejando en el ticket un id_parent con el id del documento original 
 	// un id_child con el nuevo ticket creado en el nuevo skill. 
-	
-	const { idTicket, idSkill } = req.body;
-	
+
+	const { idTicket, idSkill, blPriority } = req.body;
+
 	const idDay = + new Date().getDate();
 	const idMonth = + new Date().getMonth() + 1;
 	const idYear = + new Date().getFullYear();
-	
+
 	let cdNumber: number;
-	
+
 	Ticket.findById(idTicket).then(ticketParentDB => {
 
-		if(!ticketParentDB){
+		if (!ticketParentDB) {
 			return res.status(400).json({
 				ok: false,
 				msg: 'No existe el ticket a reenviar',
@@ -303,25 +326,25 @@ function reassignTicket(req: Request, res: Response) {
 
 		Skill.findById(idSkill).then((skillDB) => {
 
-			if(!skillDB){
+			if (!skillDB) {
 				return res.status(400).json({
 					ok: false,
 					msg: 'No existe el skill solicitado',
 					ticket: null
 				})
 			}
-	
+
 			// busco la posición que le corresponde
 			Status.findOneAndUpdate({
 				id_skill: idSkill,
 				id_year: idYear,
 				id_month: idMonth,
 				id_day: idDay
-			}, { $inc: { cd_number: 1 } }).then((statusUpdated) => {
-	
-				if (!statusUpdated) {
+			}, { $inc: { cd_number: 1 } }).then((skillNextNumber) => {
+
+				if (!skillNextNumber) {
 					// si no existe el primer turno lo crea
-	
+
 					let newSkillStatus = new Status({
 						id_skill: idSkill,
 						id_year: idYear,
@@ -329,7 +352,7 @@ function reassignTicket(req: Request, res: Response) {
 						id_day: idDay,
 						cd_number: 1
 					})
-	
+
 					newSkillStatus.save()
 						.catch(() => {
 							return res.status(400).json({
@@ -337,24 +360,25 @@ function reassignTicket(req: Request, res: Response) {
 								msg: "El nuevo status no se pudo guardar."
 							});
 						})
-	
+
 					cdNumber = newSkillStatus.cd_number;
 				}
-	
-				if (statusUpdated) {
-					cdNumber = statusUpdated.cd_number;
+
+				if (skillNextNumber) {
+					cdNumber = skillNextNumber.cd_number;
 				}
-	
-				
+
+
 
 				let idCompany = skillDB.id_company;
 				let idSocket = ticketParentDB.id_socket;
-				let idParent = ticketParentDB._id;
+				let idRoot = ticketParentDB.id_root;
 				// guardo el ticket
 
 				let ticket = new Ticket({
-					id_parent: idParent,
+					id_root: idRoot,
 					id_child: null,
+					bl_priority: blPriority,
 					cd_number: cdNumber,
 					id_socket: idSocket,
 					id_socket_desk: null,
@@ -366,12 +390,12 @@ function reassignTicket(req: Request, res: Response) {
 					tm_att: null,
 					tm_end: null
 				})
-	
+
 				ticket.save().then((ticketChildSaved) => {
-	
+
 					const server = Server.instance;
 					server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, puede realizar culquier consulta por aquí. Gracias por esperar.' });
-	
+
 					getCountPending(idCompany).then(resp => {
 						if (resp.ok) {
 							server.io.to(idCompany).emit('nuevo-turno', resp.num);
@@ -379,9 +403,9 @@ function reassignTicket(req: Request, res: Response) {
 					})
 
 					if (ticketChildSaved?.id_company) { server.io.to(ticketChildSaved.id_company).emit('actualizar-pantalla'); }
-	
+
 					let ticketUser = {
-						id_parent: ticketChildSaved.id_parent,
+						id_root: ticketChildSaved.id_root,
 						cd_number: ticketChildSaved.cd_number,
 						id_socket: ticketChildSaved.id_socket,
 						id_socket_desk: null,
@@ -393,8 +417,7 @@ function reassignTicket(req: Request, res: Response) {
 						tm_att: null,
 						tm_end: null
 					}
-					
-					ticketParentDB.id_parent = 'root';
+
 					ticketParentDB.id_child = ticketChildSaved._id;
 					ticketParentDB.tm_end = + new Date().getTime();
 					ticketParentDB.save().then(ticketParentSaved => {
@@ -405,27 +428,27 @@ function reassignTicket(req: Request, res: Response) {
 							ticket: ticketUser
 						});
 					});
-					
-	
+
+
 				}).catch(() => {
-	
+
 					return res.status(400).json({
 						ok: false,
 						msg: 'Error al guardar el ticket',
 						ticket: false
 					});
-	
+
 				})
 			}).catch(() => {
-	
+
 				return res.status(400).json({
 					ok: false,
 					msg: "Error al procesar el status de los tickets para la empresa."
 				});
-	
+
 			})
-	
-	
+
+
 		}).catch(() => {
 			return res.status(400).json({
 				ok: false,
@@ -462,31 +485,31 @@ function endTicket(req: Request, res: Response) {
 function getTickets(req: Request, res: Response) {
 	const idCompany = req.params.id_company;
 	Ticket.find({ id_company: idCompany })
-	.populate('id_desk')
-	.populate('id_skill')
-	.then((tickets) => {
+		.populate('id_desk')
+		.populate('id_skill')
+		.then((tickets) => {
 
-		if (tickets.length > 0) {
+			if (tickets.length > 0) {
+				return res.status(200).json({
+					ok: true,
+					msg: "Se encontraron tickets para la empresa solicitada.",
+					tickets
+				});
+			}
+
 			return res.status(200).json({
-				ok: true,
-				msg: "Se encontraron tickets para la empresa solicitada.",
-				tickets
+				ok: false,
+				msg: "No existen tickets para la empresa solicitada.",
+				tickets: []
 			});
-		}
 
-		return res.status(200).json({
-			ok: false,
-			msg: "No existen tickets para la empresa solicitada.",
-			tickets: []
-		});
-
-	}).catch((err) => {
-		return res.status(500).json({
-			ok: false,
-			msg: "Error al obtener los tickets para la empresa solicitada.",
-			tickets: null
-		});
-	})
+		}).catch((err) => {
+			return res.status(500).json({
+				ok: false,
+				msg: "Error al obtener los tickets para la empresa solicitada.",
+				tickets: null
+			});
+		})
 };
 
 function updateSocket(req: Request, res: Response) {

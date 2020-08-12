@@ -1,8 +1,9 @@
 import { Schema, model, Document } from 'mongoose';
 
 const ticketsSchema = new Schema({
-    id_parent: {type: String, ref: 'Ticket', required: false},
-    id_child: {type: String, ref: 'Ticket', required: false},
+    id_root: {type: String, ref: 'Ticket', required: false},
+    id_child: {type: String, ref: 'Ticket', required: false, default: false},
+    bl_priority: {type: Boolean, required: false},
     cd_number: {type: Number, required: [true, 'El id del ticket es necesario']},
     id_socket: {type: String, required: [true, 'El socket del cliente en el ticket es necesario']},
     id_socket_desk: {type: String, required: false},
@@ -16,8 +17,9 @@ const ticketsSchema = new Schema({
 },{ collection: "tickets" })
 
 export interface Ticket extends Document {
-    id_parent: string | null;
+    id_root: string | null;
     id_child: string | null;
+    bl_priority: boolean | null;
     cd_number: number;
     id_socket: string;
     id_socket_desk: string | null;

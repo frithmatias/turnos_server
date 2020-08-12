@@ -16,4 +16,4 @@ interface Status extends Document {
     cd_number: number;
 }
 
-export const Status = model<Status>('SkillStat', statusSchema);
+export const Status = model<Status>('Status', statusSchema);
