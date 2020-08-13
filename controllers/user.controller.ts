@@ -50,26 +50,26 @@ function createUser(req: any, res: Response) {
 
 function attachCompany(req: Request, res: Response) {
 
-  let company  = req.body.company;
+  let company = req.body.company;
   let idUser = req.params.idUser;
 
-  User.findByIdAndUpdate(idUser, {'id_company': company._id}, {new: true})
-  .populate('id_company')
-  .populate('id_skills')
-  .then(userUpdated => {
+  User.findByIdAndUpdate(idUser, { 'id_company': company._id }, { new: true })
+    .populate('id_company')
+    .populate('id_skills')
+    .then(userUpdated => {
 
-    return res.status(200).json({
-      ok: true,
-      msg: 'La empresa se asigno al user correctamente',
-      user: userUpdated
+      return res.status(200).json({
+        ok: true,
+        msg: 'La empresa se asigno al user correctamente',
+        user: userUpdated
+      })
+    }).catch(() => {
+      return res.status(500).json({
+        ok: true,
+        msg: 'No se pudo asignar la empresa al user',
+        user: null
+      })
     })
-  }).catch(()=>{
-    return res.status(500).json({
-      ok: true,
-      msg: 'No se pudo asignar la empresa al user',
-      user: null
-    })
-  })
 
 }
 
@@ -97,7 +97,9 @@ function checkEmailExists(req: Request, res: Response) {
 }
 
 function updateToken(req: any, res: Response) {
-  var token = Token.getJwtToken({ user: req.user })
+
+  let body = req.body;
+  var token = Token.getJwtToken({ user: body.user })
   res.status(200).json({
     ok: true,
     user: req.user,
@@ -122,7 +124,99 @@ async function verify(token: string) {
 
 async function loginGoogle(req: Request, res: Response) {
   var gtoken = req.body.gtoken;
-  var googleUser: any = await verify(gtoken) // devuelve una promesa
+  await verify(gtoken)
+    .then((googleUser) => {
+
+      User.findOne({ tx_email: googleUser.email })
+        .populate('id_company')
+        .populate('id_skills')
+        .then(userDB => {
+
+          if (userDB) {  // el user existe, intenta loguearse
+
+            if (userDB.bl_google === false) {
+
+              return res.status(400).json({
+                ok: false,
+                msg: "Para el email ingresado debe usar autenticación con clave.",
+                user: null
+              });
+
+            } else {
+
+              // Google SignIn -> new token
+              var token = Token.getJwtToken({ user: userDB });
+
+              userDB.updateOne({ fc_lastlogin: + new Date().getTime() })
+                .then(userSaved => {
+
+                  userSaved.tx_password = ":)";
+                  res.status(200).json({
+                    ok: true,
+                    msg: 'Login exitoso',
+                    token: token,
+                    user: userDB,
+                    menu: obtenerMenu(userDB.id_role),
+                    home: '/user/home'
+                  });
+
+                }).catch((err) => {
+
+                  return res.status(400).json({
+                    ok: false,
+                    msg: 'Error al loguear el user de Google',
+                    err
+                  });
+
+                });
+
+            }
+
+          } else { // el user no existe, hay que crearlo.
+
+            var user = new User();
+
+            user.tx_email = googleUser.email;
+            user.tx_name = googleUser.name;
+            user.tx_password = ':)';
+            user.tx_img = googleUser.img;
+            user.bl_google = true;
+            user.fc_lastlogin = new Date();
+            user.fc_createdat = new Date();
+            user.id_role = 'USER_ROLE';
+
+            user.save().then(userSaved => {
+
+              var token = Token.getJwtToken({ user: userDB })
+
+              res.status(200).json({
+                ok: true,
+                msg: 'Usuario creado y logueado correctamente',
+                token: token,
+                user,
+                menu: obtenerMenu(userSaved.id_role),
+                home: '/user/home'
+              });
+
+            }).catch((err) => {
+
+              res.status(500).json({
+                ok: false,
+                msg: 'Error al guardar el user de Google',
+                err
+              });
+            })
+          }
+        }).catch((err) => {
+
+          res.status(500).json({
+            ok: false,
+            msg: "Error al buscar user",
+            error: err
+          });
+
+        })
+    })
     .catch(err => {
       res.status(403).json({
         ok: false,
@@ -132,103 +226,6 @@ async function loginGoogle(req: Request, res: Response) {
     });
 
 
-  if (!googleUser) {
-    return res.status(500).json({
-      ok: false,
-      message: "No se pudo obtener el user de Google.",
-      err: null
-    });
-  }
-
-  User.findOne({ tx_email: googleUser.email })
-  .populate('id_company')
-  .populate('id_skills')
-  .then(userDB => {
-
-    if (userDB) {  // el user existe, intenta loguearse
-
-      if (userDB.bl_google === false) {
-
-        return res.status(400).json({
-          ok: false,
-          msg: "Para el email ingresado debe usar autenticación con clave.",
-          user: null
-        });
-
-      } else {
-
-        // Google SignIn -> new token
-        var token = Token.getJwtToken({ user: userDB });
-
-        userDB.updateOne({fc_lastlogin: + new Date().getTime()})
-        .then(userSaved => {
-
-          userSaved.tx_password = ":)";
-          res.status(200).json({
-            ok: true,
-            msg: 'Login exitoso',
-            token: token,
-            user: userDB,
-            menu: obtenerMenu(userDB.id_role),
-            home: '/user/home'
-          });
-
-        }).catch((err) => {
-
-          return res.status(400).json({
-            ok: false,
-            msg: 'Error al loguear el user de Google',
-            err
-          });
-
-        });
-
-      }
-
-    } else { // el user no existe, hay que crearlo.
-
-      var user = new User();
-
-      user.tx_email = googleUser.email;
-      user.tx_name = googleUser.name;
-      user.tx_password = ':)';
-      user.tx_img = googleUser.img;
-      user.bl_google = true;
-      user.fc_lastlogin = new Date();
-      user.fc_createdat = new Date();
-      user.id_role = 'USER_ROLE';
-
-      user.save().then(userSaved => {
-
-        var token = Token.getJwtToken({ user: userDB })
-
-        res.status(200).json({
-          ok: true,
-          msg: 'Usuario creado y logueado correctamente',
-          token: token,
-          user,
-          menu: obtenerMenu(userSaved.id_role),
-          home: '/user/home'
-        });
-
-      }).catch((err) => {
-
-        res.status(500).json({
-          ok: false,
-          msg: 'Error al guardar el user de Google',
-          err
-        });
-      })
-    }
-  }).catch((err)=> {
-
-      res.status(500).json({
-        ok: false,
-        msg: "Error al buscar user",
-        error: err
-      });
-
-    })
 }
 
 function loginUser(req: Request, res: Response) {

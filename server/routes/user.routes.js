@@ -10,7 +10,7 @@ const auth_1 = __importDefault(require("../middlewares/auth"));
 const user_controller_1 = __importDefault(require("../controllers/user.controller"));
 // ROUTES
 const userRoutes = express_1.Router();
-userRoutes.post('/updatetoken', auth_1.default.verificaToken, user_controller_1.default.updateToken);
+userRoutes.post('/updatetoken', user_controller_1.default.updateToken);
 userRoutes.post('/google', user_controller_1.default.loginGoogle);
 userRoutes.post('/login', user_controller_1.default.loginUser);
 userRoutes.post('/register', user_controller_1.default.createUser);

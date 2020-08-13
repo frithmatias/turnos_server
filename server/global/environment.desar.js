@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.environment = {
     URL_SERVICES: 'https://webturnos.herokuapp.com',
     TOKEN_SEED: '@Mi-cLaVe-SeCRet@-de-SEED',
-    TOKEN_TIMEOUT: '30d',
+    TOKEN_TIMEOUT: '2h',
     GOOGLE_CLIENT_ID: '1096997200162-ltingmttj4f6ig8cij6e9g94ur9fs81m.apps.googleusercontent.com',
     GOOGLE_SECRET: 'jOyY034yOLLPJ4DEOk9s5MpX',
     DB_CONN_STR: 'mongodb://localhost:27017/webturnos',

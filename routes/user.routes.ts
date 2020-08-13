@@ -9,7 +9,7 @@ import UserController from '../controllers/user.controller';
 // ROUTES
 const userRoutes = Router();
 
-userRoutes.post('/updatetoken', mdAuth.verificaToken, UserController.updateToken);
+userRoutes.post('/updatetoken', UserController.updateToken);
 userRoutes.post('/google', UserController.loginGoogle);
 userRoutes.post('/login', UserController.loginUser);
 userRoutes.post('/register', UserController.createUser);

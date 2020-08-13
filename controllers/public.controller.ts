@@ -60,7 +60,6 @@ function postContact(req: Request, res: Response) {
 function postScore(req: Request, res: Response) {
 
   let scores = req.body;
-
   Score.insertMany(scores).then(scoresSaved => {
     if(!scoresSaved){
       return res.status(400).json({
