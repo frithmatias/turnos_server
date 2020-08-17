@@ -15,5 +15,5 @@ userRoutes.post('/google', user_controller_1.default.loginGoogle);
 userRoutes.post('/login', user_controller_1.default.loginUser);
 userRoutes.post('/register', user_controller_1.default.createUser);
 userRoutes.post('/checkemailexists', user_controller_1.default.checkEmailExists);
-userRoutes.post('/attach/:idUser', auth_1.default.verificaToken, user_controller_1.default.attachCompany);
+userRoutes.post('/attachcompany/:idUser', auth_1.default.verificaToken, user_controller_1.default.attachCompany);
 exports.default = userRoutes;

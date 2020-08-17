@@ -37,7 +37,7 @@ function createTicket(req: Request, res: Response) {
 			id_year: idYear,
 			id_month: idMonth,
 			id_day: idDay
-		}, { $inc: { cd_number: 1 } }).then((skillNextNumber) => {
+		}, { $inc: { cd_number: 1 } }, { new: true }).then((skillNextNumber) => {
 
 			// si no existe el primer turno lo crea
 			if (!skillNextNumber) {
@@ -88,13 +88,8 @@ function createTicket(req: Request, res: Response) {
 
 				const server = Server.instance;
 				server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, puede realizar culquier consulta por aquí. Gracias por esperar.' });
-
-				getCountPending(idCompany).then(resp => {
-					if (resp.ok) {
-						server.io.to(idCompany).emit('nuevo-turno', resp.num);
-					}
-				})
-
+				server.io.to(idCompany).emit('nuevo-turno');
+				
 				let ticketUser = {
 					_id: ticketSaved._id,
 					cd_number: ticketSaved.cd_number,
@@ -195,53 +190,53 @@ function takeTicket(req: Request, res: Response) {
 					id_desk: null,
 					tm_end: null
 				})
-				.sort({bl_priority:-1, tm_start:1}) // priority true first
-				// .limit(1)
-				.then(ticketDB => {
+					.sort({ bl_priority: -1, tm_start: 1 }) // priority true first
+					// .limit(1)
+					.then(ticketDB => {
 
-					if (!ticketDB) {
-						return res.status(200).json({
+						if (!ticketDB) {
+							return res.status(200).json({
+								ok: false,
+								msg: 'No existen tickets pendientes.',
+								ticket: null
+							})
+						}
+
+						if (ticketDB) {
+
+							ticketDB.tm_att = + new Date().getTime();
+							ticketDB.id_desk = idDesk;
+							ticketDB.id_socket_desk = idSocketDesk;
+							ticketDB.id_assistant = idAssistant;
+							ticketDB.save().then(ticketSaved => {
+
+								server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${desktopDB.cd_desktop} por ${assistantDB.tx_name} ` });
+								//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
+								if (ticketSaved?.id_company) { server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); }
+
+								return res.status(200).json({
+									ok: true,
+									msg: 'Ticket obtenido correctamente',
+									ticket: ticketDB
+								});
+
+							}).catch(() => {
+								return res.status(400).json({
+									ok: false,
+									msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
+									ticket: null
+								});
+							})
+
+						}
+
+					}).catch(() => {
+						return res.status(500).json({
 							ok: false,
-							msg: 'No existen tickets pendientes.',
+							msg: 'Error al consultar el ticket',
 							ticket: null
 						})
-					}
-
-					if (ticketDB) {
-
-						ticketDB.tm_att = + new Date().getTime();
-						ticketDB.id_desk = idDesk;
-						ticketDB.id_socket_desk = idSocketDesk;
-						ticketDB.id_assistant = idAssistant;
-						ticketDB.save().then(ticketSaved => {
-
-							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${desktopDB.cd_desktop} por ${assistantDB.tx_name} ` });
-							//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
-							if (ticketSaved?.id_company) { server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); }
-
-							return res.status(200).json({
-								ok: true,
-								msg: 'Ticket obtenido correctamente',
-								ticket: ticketDB
-							});
-
-						}).catch(() => {
-							return res.status(400).json({
-								ok: false,
-								msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
-								ticket: null
-							});
-						})
-
-					}
-
-				}).catch(() => {
-					return res.status(500).json({
-						ok: false,
-						msg: 'Error al consultar el ticket',
-						ticket: null
 					})
-				})
 			}
 		}).catch(() => {
 			return res.status(500).json({
@@ -263,11 +258,22 @@ function cancelTicket(req: Request, res: Response) {
 	const idTicket = req.params.idTicket;
 
 	Ticket.findByIdAndUpdate(idTicket, { tm_end: + new Date().getTime() }).then((ticketCanceled) => {
-		return res.status(200).json({
-			ok: true,
-			msg: "Ticket finalizado correctamente",
-			ticket: ticketCanceled
-		})
+		if (ticketCanceled) {
+
+			if (ticketCanceled.id_socket_desk){
+				// cancel dekstop session and update tickets on assistant desktop 
+				server.io.to(ticketCanceled.id_socket_desk).emit('turno-cancelado', ticketCanceled._id);
+			} else {
+				// update tickets on desktops
+				server.io.to(ticketCanceled.id_company).emit('nuevo-turno');
+			}
+
+			return res.status(200).json({
+				ok: true,
+				msg: "Ticket finalizado correctamente",
+				ticket: ticketCanceled
+			})
+		}
 	}).catch(() => {
 		return res.status(400).json({
 			ok: false,
@@ -340,7 +346,7 @@ function reassignTicket(req: Request, res: Response) {
 				id_year: idYear,
 				id_month: idMonth,
 				id_day: idDay
-			}, { $inc: { cd_number: 1 } }).then((skillNextNumber) => {
+			}, { $inc: { cd_number: 1 } }, { new: true }).then((skillNextNumber) => {
 
 				if (!skillNextNumber) {
 					// si no existe el primer turno lo crea
@@ -402,7 +408,6 @@ function reassignTicket(req: Request, res: Response) {
 						}
 					})
 
-					if (ticketChildSaved?.id_company) { server.io.to(ticketChildSaved.id_company).emit('actualizar-pantalla'); }
 
 					let ticketUser = {
 						id_root: ticketChildSaved.id_root,
@@ -421,6 +426,8 @@ function reassignTicket(req: Request, res: Response) {
 					ticketParentDB.id_child = ticketChildSaved._id;
 					ticketParentDB.tm_end = + new Date().getTime();
 					ticketParentDB.save().then(ticketParentSaved => {
+
+						if (ticketChildSaved?.id_company) { server.io.to(ticketChildSaved.id_company).emit('actualizar-pantalla'); }
 
 						res.status(201).json({
 							ok: true,
@@ -467,7 +474,15 @@ function reassignTicket(req: Request, res: Response) {
 function endTicket(req: Request, res: Response) {
 	const idTicket = req.body.idTicket;
 	Ticket.findByIdAndUpdate(idTicket, { tm_end: + new Date().getTime() }).then(ticketEnded => {
-		if (ticketEnded?.id_company) { server.io.to(ticketEnded.id_company).emit('actualizar-pantalla'); }
+		if (ticketEnded?.id_company) {
+			server.io.to(ticketEnded.id_company).emit('actualizar-pantalla'); // clients
+			getCountPending(ticketEnded.id_company).then(resp => { // desktops
+				if (resp.ok) {
+					server.io.to(ticketEnded.id_company).emit('nuevo-turno', resp.num);
+				}
+			})
+		}
+
 		return res.status(200).json({
 			ok: true,
 			msg: 'Ticket finalizado correctamente',
@@ -528,7 +543,6 @@ function updateSocket(req: Request, res: Response) {
 		}
 
 		let requestUpdateTo: string;
-
 		switch (oldSocket) {
 			case ticketDB.id_socket: // actualizo el socket del cliente
 				ticketDB.id_socket = newSocket;
@@ -544,15 +558,15 @@ function updateSocket(req: Request, res: Response) {
 
 
 		ticketDB.save().then((ticketUpdated) => {
-
 			// antes de enviar el ticket actualizado al solicitante, tengo que 
 			// avisarle a la otra parte, que tiene que actualizar el ticket. 
-
-			server.io.to(requestUpdateTo).emit('ticket-updated', {
-				ok: true,
-				msg: 'El socket del destino ha cambiado',
-				ticket: ticketUpdated
-			});
+			if(requestUpdateTo){
+				server.io.to(requestUpdateTo).emit('ticket-updated', {
+					ok: true,
+					msg: 'El socket del destino ha cambiado',
+					ticket: ticketUpdated
+				});
+			}
 
 			return res.status(200).json({
 				ok: true,
