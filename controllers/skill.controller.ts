@@ -19,6 +19,11 @@ function createSkill(req: Request, res: Response) {
         bl_generic: body.bl_generic
     });
 
+    if (body.bl_generic) {
+        skill.cd_skill = 'T';
+        skill.tx_skill = 'DEFAULT_SKILL'
+    }
+
     skill.save().then((skillSaved) => {
 
         Company.findById(body.id_company).then(companyDB => {
@@ -113,7 +118,7 @@ function readSkillsUser(req: Request, res: Response) {
 function deleteSkill(req: Request, res: Response) {
     let idSkill = req.params.idSkill;
 
-    
+
     Skill.findById(idSkill).then(skillDB => {
         Company.findById(skillDB?.id_company).then(companyDB => {
             // elimino el skill del usuario
@@ -140,14 +145,14 @@ function deleteSkill(req: Request, res: Response) {
                     skill: null
                 })
             })
-        }).catch(()=>{
+        }).catch(() => {
             res.status(400).json({
                 ok: false,
                 msg: 'Error al obtener la empresa',
                 skill: null
             })
         })
-    }).catch(()=>{
+    }).catch(() => {
         res.status(400).json({
             ok: false,
             msg: 'Error al obtener el skill',

@@ -13,6 +13,10 @@ function createSkill(req, res) {
         tx_skill: body.tx_skill,
         bl_generic: body.bl_generic
     });
+    if (body.bl_generic) {
+        skill.cd_skill = 'T';
+        skill.tx_skill = 'DEFAULT_SKILL';
+    }
     skill.save().then((skillSaved) => {
         company_model_1.Company.findById(body.id_company).then(companyDB => {
             user_model_1.User.findByIdAndUpdate(companyDB === null || companyDB === void 0 ? void 0 : companyDB.id_user, { $push: { id_skills: skillSaved._id } }).then(() => {

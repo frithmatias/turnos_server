@@ -28,7 +28,7 @@ function createCompany(req: Request, res: Response) {
     const skill = new Skill();
     skill.id_company = companySaved._id;
     skill.cd_skill = 'T';
-    skill.tx_skill = 'GENERIC_SKILL';
+    skill.tx_skill = 'DEFAULT_SKILL';
     skill.bl_generic = true;
     skill.save().then((skillSaved) => {
 
