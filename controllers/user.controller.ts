@@ -25,7 +25,9 @@ function createUser(req: any, res: Response) {
     tx_email: body.user.tx_email,
     tx_password: bcrypt.hashSync(body.user.tx_password, 10),
     bl_google: false,
-    fc_createdat: new Date()
+    fc_lastlogin: null,
+    fc_createdat: new Date(),
+    id_role: 'ADMIN_ROLE',
   });
 
   user.save().then((userSaved) => {

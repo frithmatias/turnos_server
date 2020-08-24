@@ -11,7 +11,7 @@ function createSkill(req, res) {
         id_company: body.id_company,
         cd_skill: body.cd_skill,
         tx_skill: body.tx_skill,
-        bl_generic: false
+        bl_generic: body.bl_generic
     });
     skill.save().then((skillSaved) => {
         company_model_1.Company.findById(body.id_company).then(companyDB => {

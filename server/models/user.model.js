@@ -7,7 +7,7 @@ const mongoose_1 = require("mongoose");
 const mongoose_unique_validator_1 = __importDefault(require("mongoose-unique-validator"));
 const bcrypt_1 = __importDefault(require("bcrypt"));
 var rolesValidos = {
-    values: ["ADMIN_ROLE", "USER_ROLE", "ASSISTANT_ROLE"],
+    values: ["SUPERUSER_ROLE", "ADMIN_ROLE", "ASSISTANT_ROLE"],
     message: "{VALUE} no es un rol permitido"
 };
 const userSchema = new mongoose_1.Schema({
@@ -15,7 +15,7 @@ const userSchema = new mongoose_1.Schema({
     tx_email: { type: String, unique: true, required: [true, 'El email es necesario'] },
     tx_password: { type: String, required: [true, 'El password es necesario'] },
     id_company: { type: String, ref: 'Company', required: false },
-    id_role: { type: String, required: true, default: 'USER_ROLE', enum: rolesValidos },
+    id_role: { type: String, required: [true, 'El rol del usuario es necesario'] },
     id_skills: [{ type: String, ref: 'Skill', required: false }],
     tx_img: { type: String, required: false },
     bl_google: { type: Boolean, required: true, default: false },

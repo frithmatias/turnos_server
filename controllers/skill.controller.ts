@@ -16,7 +16,7 @@ function createSkill(req: Request, res: Response) {
         id_company: body.id_company,
         cd_skill: body.cd_skill,
         tx_skill: body.tx_skill,
-        bl_generic: false
+        bl_generic: body.bl_generic
     });
 
     skill.save().then((skillSaved) => {
