@@ -73,7 +73,7 @@ function createTicket(req, res) {
             ticket.save().then((ticketSaved) => {
                 const server = server_1.default.instance;
                 server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, puede realizar culquier consulta por aquí. Gracias por esperar.' });
-                server.io.to(idCompany).emit('nuevo-turno');
+                server.io.to(idCompany).emit('turno-nuevo');
                 let ticketUser = {
                     _id: ticketSaved._id,
                     cd_number: ticketSaved.cd_number,
@@ -224,7 +224,7 @@ function cancelTicket(req, res) {
             }
             else {
                 // update tickets on desktops
-                server.io.to(ticketCanceled.id_company).emit('nuevo-turno');
+                server.io.to(ticketCanceled.id_company).emit('turno-nuevo');
             }
             return res.status(200).json({
                 ok: true,
@@ -342,7 +342,7 @@ function reassignTicket(req, res) {
                     server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, puede realizar culquier consulta por aquí. Gracias por esperar.' });
                     getCountPending(idCompany).then(resp => {
                         if (resp.ok) {
-                            server.io.to(idCompany).emit('nuevo-turno', resp.num);
+                            server.io.to(idCompany).emit('turno-nuevo', resp.num);
                         }
                     });
                     let ticketUser = {
@@ -400,7 +400,7 @@ function endTicket(req, res) {
             server.io.to(ticketEnded.id_company).emit('actualizar-pantalla'); // clients
             getCountPending(ticketEnded.id_company).then(resp => {
                 if (resp.ok) {
-                    server.io.to(ticketEnded.id_company).emit('nuevo-turno', resp.num);
+                    server.io.to(ticketEnded.id_company).emit('turno-nuevo', resp.num);
                 }
             });
         }

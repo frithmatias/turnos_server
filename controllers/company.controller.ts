@@ -22,12 +22,44 @@ function createCompany(req: Request, res: Response) {
     fc_att_end: null
   });
 
-  company.save().then((companySaved) => {
-    return res.status(200).json({
-      ok: true,
-      msg: 'Empresa creada correctamente',
-      company: companySaved
+  company.save().then((companySaved) => { 
+    
+    // create generic skill for this company
+    const skill = new Skill();
+    skill.id_company = companySaved._id;
+    skill.cd_skill = 'T';
+    skill.tx_skill = 'GENERIC_SKILL';
+    skill.bl_generic = true;
+    skill.save().then((skillSaved) => {
+
+      // assign this generic skill for the user
+      const skills = [skillSaved._id];
+      User.findByIdAndUpdate(body.company.id_user, {id_skills: skills}).then(()=>{
+  
+        return res.status(200).json({
+          ok: true,
+          msg: 'Empresa creada correctamente',
+          company: companySaved
+        })
+
+      }).catch(()=> {
+
+        return res.status(400).json({
+          ok: true,
+          msg: 'Se genero la companía y el skill genérico, pero hubo un error al asignar el skill al usuario',
+          company: companySaved
+        })
+
+      })
+
+    }).catch((err)=>{
+      return res.status(400).json({
+        ok: false,
+        msg: err,
+        company: null
+      })
     })
+
   }).catch((err) => {
     return res.status(400).json({
       ok: false,
@@ -156,29 +188,29 @@ function updateCompany(req: Request, res: Response) {
 function deleteCompany(req: Request, res: Response) {
 
   var idCompany = req.params.idCompany;
-  
+
   let users = User.deleteMany({ id_company: idCompany, id_role: 'ASSISTANT_ROLE' }).then(usersDeleted => usersDeleted)
   let skills = Skill.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
   let desktops = Desktop.deleteMany({ id_company: idCompany }).then(usersDeleted => usersDeleted)
   let company = Company.findByIdAndDelete(idCompany).then(usersDeleted => usersDeleted)
-  
-  Promise.all([users,skills,desktops,company]).then( resp => {
+
+  Promise.all([users, skills, desktops, company]).then(resp => {
     return res.status(200).json({
       ok: true,
       msg: 'La empresa y sus vínculos fueron eliminados correctamente',
       company: {
         company: resp[3],
-        childs: {users: resp[0],skills: resp[1],desktops: resp[2]}
+        childs: { users: resp[0], skills: resp[1], desktops: resp[2] }
       }
     });
-  }).catch(()=>{
+  }).catch(() => {
     return res.status(400).json({
       ok: false,
       msg: 'Error al eliminar la empresa o uno de sus vínculos'
     });
   });
 }
- 
+
 function checkCompanyExists(req: Request, res: Response) {
 
   let pattern = req.body.pattern;

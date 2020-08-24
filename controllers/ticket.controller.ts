@@ -88,8 +88,8 @@ function createTicket(req: Request, res: Response) {
 
 				const server = Server.instance;
 				server.io.to(idSocket).emit('mensaje-privado', { msg: 'Bienvenido, puede realizar culquier consulta por aquí. Gracias por esperar.' });
-				server.io.to(idCompany).emit('nuevo-turno');
-				
+				server.io.to(idCompany).emit('turno-nuevo');
+
 				let ticketUser = {
 					_id: ticketSaved._id,
 					cd_number: ticketSaved.cd_number,
@@ -260,12 +260,12 @@ function cancelTicket(req: Request, res: Response) {
 	Ticket.findByIdAndUpdate(idTicket, { tm_end: + new Date().getTime() }).then((ticketCanceled) => {
 		if (ticketCanceled) {
 
-			if (ticketCanceled.id_socket_desk){
+			if (ticketCanceled.id_socket_desk) {
 				// cancel dekstop session and update tickets on assistant desktop 
 				server.io.to(ticketCanceled.id_socket_desk).emit('turno-cancelado', ticketCanceled._id);
 			} else {
 				// update tickets on desktops
-				server.io.to(ticketCanceled.id_company).emit('nuevo-turno');
+				server.io.to(ticketCanceled.id_company).emit('turno-nuevo');
 			}
 
 			return res.status(200).json({
@@ -404,7 +404,7 @@ function reassignTicket(req: Request, res: Response) {
 
 					getCountPending(idCompany).then(resp => {
 						if (resp.ok) {
-							server.io.to(idCompany).emit('nuevo-turno', resp.num);
+							server.io.to(idCompany).emit('turno-nuevo', resp.num);
 						}
 					})
 
@@ -478,7 +478,7 @@ function endTicket(req: Request, res: Response) {
 			server.io.to(ticketEnded.id_company).emit('actualizar-pantalla'); // clients
 			getCountPending(ticketEnded.id_company).then(resp => { // desktops
 				if (resp.ok) {
-					server.io.to(ticketEnded.id_company).emit('nuevo-turno', resp.num);
+					server.io.to(ticketEnded.id_company).emit('turno-nuevo', resp.num);
 				}
 			})
 		}
@@ -560,7 +560,7 @@ function updateSocket(req: Request, res: Response) {
 		ticketDB.save().then((ticketUpdated) => {
 			// antes de enviar el ticket actualizado al solicitante, tengo que 
 			// avisarle a la otra parte, que tiene que actualizar el ticket. 
-			if(requestUpdateTo){
+			if (requestUpdateTo) {
 				server.io.to(requestUpdateTo).emit('ticket-updated', {
 					ok: true,
 					msg: 'El socket del destino ha cambiado',

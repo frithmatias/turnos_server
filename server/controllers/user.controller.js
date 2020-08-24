@@ -139,7 +139,7 @@ function loginGoogle(req, res) {
                                 token: token,
                                 user: userDB,
                                 menu: obtenerMenu(userDB.id_role),
-                                home: '/user/home'
+                                home: '/admin/home'
                             });
                         }).catch((err) => {
                             return res.status(400).json({
@@ -159,7 +159,7 @@ function loginGoogle(req, res) {
                     user.bl_google = true;
                     user.fc_lastlogin = new Date();
                     user.fc_createdat = new Date();
-                    user.id_role = 'USER_ROLE';
+                    user.id_role = 'ADMIN_ROLE';
                     user.save().then(userSaved => {
                         var token = token_1.default.getJwtToken({ user: userDB });
                         res.status(200).json({
@@ -168,7 +168,7 @@ function loginGoogle(req, res) {
                             token: token,
                             user,
                             menu: obtenerMenu(userSaved.id_role),
-                            home: '/user/home'
+                            home: '/admin/home'
                         });
                     }).catch((err) => {
                         res.status(500).json({
@@ -218,7 +218,7 @@ function loginUser(req, res) {
         userDB.fc_lastlogin = new Date();
         userDB.save().then(() => {
             userDB.tx_password = ":)";
-            let home = userDB.id_role === 'USER_ROLE' ? '/user/home' : '/assistant/home';
+            let home = userDB.id_role === 'ADMIN_ROLE' ? '/admin/home' : '/assistant/home';
             res.status(200).json({
                 ok: true,
                 msg: "Login post recibido.",
@@ -246,7 +246,7 @@ function loginUser(req, res) {
 }
 function obtenerMenu(id_role) {
     var menu = [];
-    if ((id_role === "ASSISTANT_ROLE") || (id_role === "USER_ROLE")) {
+    if ((id_role === "ASSISTANT_ROLE") || (id_role === "ADMIN_ROLE")) {
         menu.push({
             titulo: "Asistente",
             icon: "headset_mic",
@@ -257,31 +257,31 @@ function obtenerMenu(id_role) {
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }
-    if (id_role === "USER_ROLE") {
-        menu.push({
-            titulo: "Usuario",
-            icon: "local_police",
-            submenu: [
-                { titulo: "Home", url: "/user/home", icon: "home" },
-                { titulo: "Mi Perfil", url: "/user/profile", icon: "face" },
-                { titulo: "Comercios", url: "/user/companies", icon: "store" },
-                { titulo: "Asistentes", url: "/user/assistants", icon: "headset_mic" },
-                { titulo: "Escritorios", url: "/user/desktops", icon: "important_devices" },
-                { titulo: "Skills", url: "/user/skills", icon: "playlist_add_check" },
-                { titulo: "Turnos", url: "/user/tickets", icon: "bookmark" },
-                { titulo: "Dashboard", url: "/user/dashboard", icon: "insights" },
-            ]
-        }); // unshift lo coloca al princio del array, push lo coloca al final.
-    }
     if (id_role === "ADMIN_ROLE") {
         menu.push({
             titulo: "Administrador",
+            icon: "local_police",
+            submenu: [
+                { titulo: "Home", url: "/admin/home", icon: "home" },
+                { titulo: "Mi Perfil", url: "/admin/profile", icon: "face" },
+                { titulo: "Comercios", url: "/admin/companies", icon: "store" },
+                { titulo: "Asistentes", url: "/admin/assistants", icon: "headset_mic" },
+                { titulo: "Escritorios", url: "/admin/desktops", icon: "important_devices" },
+                { titulo: "Skills", url: "/admin/skills", icon: "playlist_add_check" },
+                { titulo: "Turnos", url: "/admin/tickets", icon: "bookmark" },
+                { titulo: "Dashboard", url: "/admin/dashboard", icon: "insights" },
+            ]
+        }); // unshift lo coloca al princio del array, push lo coloca al final.
+    }
+    if (id_role === "SUPERUSER_ROLE") {
+        menu.push({
+            titulo: "Super Usuario",
             icon: "face",
             submenu: [
-                { titulo: "Usuarios", url: "/admin/users", icon: "mdi mdi-account-multiple-plus" },
-                { titulo: "Empresas", url: "/admin/company", icon: "mdi mdi-city" },
-                { titulo: "Turnos", url: "/admin/tickets", icon: "mdi mdi-table-large" },
-                { titulo: "Metricas", url: "/admin/metrics", icon: "mdi mdi-console" }
+                { titulo: "Usuarios", url: "/superuser/users", icon: "mdi mdi-account-multiple-plus" },
+                { titulo: "Empresas", url: "/superuser/company", icon: "mdi mdi-city" },
+                { titulo: "Turnos", url: "/superuser/tickets", icon: "mdi mdi-table-large" },
+                { titulo: "Metricas", url: "/superuser/metrics", icon: "mdi mdi-console" }
             ]
         }); // unshift lo coloca al princio del array, push lo coloca al final.
     }

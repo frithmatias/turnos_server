@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[7],{IXJq:function(n,e,r){"use strict";r.r(e),r.d(e,"SuperuserModule",(function(){return u}));var t=r("SVse"),o=r("8Y7J");let u=(()=>{class n{}return n.\u0275mod=o.Kb({type:n}),n.\u0275inj=o.Jb({factory:function(e){return new(e||n)},imports:[[t.b]]}),n})()}}]);

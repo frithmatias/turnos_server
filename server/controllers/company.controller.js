@@ -20,10 +20,34 @@ function createCompany(req, res) {
         fc_att_end: null
     });
     company.save().then((companySaved) => {
-        return res.status(200).json({
-            ok: true,
-            msg: 'Empresa creada correctamente',
-            company: companySaved
+        // create generic skill for this company
+        const skill = new skill_model_1.Skill();
+        skill.id_company = companySaved._id;
+        skill.cd_skill = 'T';
+        skill.tx_skill = 'GENERIC_SKILL';
+        skill.bl_generic = true;
+        skill.save().then((skillSaved) => {
+            // assign this generic skill for the user
+            const skills = [skillSaved._id];
+            user_model_1.User.findByIdAndUpdate(body.company.id_user, { id_skills: skills }).then(() => {
+                return res.status(200).json({
+                    ok: true,
+                    msg: 'Empresa creada correctamente',
+                    company: companySaved
+                });
+            }).catch(() => {
+                return res.status(400).json({
+                    ok: true,
+                    msg: 'Se genero la companía y el skill genérico, pero hubo un error al asignar el skill al usuario',
+                    company: companySaved
+                });
+            });
+        }).catch((err) => {
+            return res.status(400).json({
+                ok: false,
+                msg: err,
+                company: null
+            });
         });
     }).catch((err) => {
         return res.status(400).json({
