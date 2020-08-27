@@ -15,7 +15,13 @@ import skillRoutes from './routes/skill.routes';
 import desktopRoutes from './routes/desktop.routes';
 import assistantRoutes from './routes/assistant.routes';
 import notificationRoutes from './routes/notification.routes';
+import indicatorRoutes from './routes/indicator.routes';
+import metricRoutes from './routes/metric.routes';
+
+
+
 import environment from './global/environment';
+
 
 // SINGLETON
 // const server = new Server();
@@ -51,6 +57,9 @@ server.app.use('/s', skillRoutes);
 server.app.use('/d', desktopRoutes);
 server.app.use('/a', assistantRoutes);
 server.app.use('/n', notificationRoutes);
+server.app.use('/m', metricRoutes);
+server.app.use('/i', indicatorRoutes);
+
 
 
 server.start(() => {

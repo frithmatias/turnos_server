@@ -1,19 +1,19 @@
 import { Schema, model, Document } from 'mongoose';
 
-const statusSchema = new Schema({
+const positionSchema = new Schema({
     id_day: {type: Number, required: [true, 'El id_day es necesario']},
     id_month: {type: Number, required: [true, 'El id_month es necesario']},
     id_year: {type: Number, required: [true, 'El id_year es necesario']},
     id_skill: {type: String, required: [true, 'El id_skill es necesario']},
-    cd_number: {type: Number, required: [true, 'El cd_number es necesario']},
-},{ collection: "status" })
+    id_position: {type: Number, required: [true, 'El id_position es necesario']},
+},{ collection: "position" })
 
-interface Status extends Document {
+interface Position extends Document {
     id_day: number;
     id_month: number;
     id_year: number;
     id_skill: string;
-    cd_number: number;
+    id_position: number;
 }
 
-export const Status = model<Status>('Status', statusSchema);
+export const Position = model<Position>('Position', positionSchema);

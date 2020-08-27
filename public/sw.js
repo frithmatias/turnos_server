@@ -13,14 +13,14 @@ self.addEventListener('install', e => {
       return cache.addAll([
         '/',
         '/index.html',
-        '/4.61453ad595abbec63bd5.js',
-        '/5.a92031cfce6cb1c4f8a8.js',
-        '/6.4d46cc068ecfcf3383f4.js',
+        '/4.2962923269b1d6ad1865.js',
+        '/5.69d2bae3927454cd0c5b.js',
+        '/6.b1e1b6419d3efa389013.js',
         '/7.323c201369a9b32a50ae.js',
-        '/main.6252854f933d429b290a.js',
+        '/main.0481696b07a72493e5c0.js',
         '/polyfills.ac27f9db7182d098bf2e.js',
-        '/runtime.b9210205da487d50a46a.js',
-        '/styles.b416e3af2aea8004611c.css'
+        '/runtime.5418d12bfa367f341885.js',
+        '/styles.6004a78fc0761cca7988.css'
       ])
     })
     .catch(() => {

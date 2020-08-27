@@ -19,6 +19,8 @@ const skill_routes_1 = __importDefault(require("./routes/skill.routes"));
 const desktop_routes_1 = __importDefault(require("./routes/desktop.routes"));
 const assistant_routes_1 = __importDefault(require("./routes/assistant.routes"));
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
+const indicator_routes_1 = __importDefault(require("./routes/indicator.routes"));
+const metric_routes_1 = __importDefault(require("./routes/metric.routes"));
 const environment_1 = __importDefault(require("./global/environment"));
 // SINGLETON
 // const server = new Server();
@@ -50,6 +52,8 @@ server.app.use('/s', skill_routes_1.default);
 server.app.use('/d', desktop_routes_1.default);
 server.app.use('/a', assistant_routes_1.default);
 server.app.use('/n', notification_routes_1.default);
+server.app.use('/m', metric_routes_1.default);
+server.app.use('/i', indicator_routes_1.default);
 server.start(() => {
     console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }
 });

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { Desktop } from '../models/desktop.model';
-import { DeskStat } from '../models/deskstat.model';
+import { Session } from '../models/session.model';
 import { Company } from '../models/company.model';
 
 // ========================================================
@@ -13,7 +13,7 @@ function createDesktop(req: Request, res: Response) {
     var desktop = new Desktop({
         id_company: body.id_company,
         cd_desktop: body.cd_desktop,
-        id_assistant: body.id_assistant
+        id_session: null
     });
 
     desktop.save().then((desktopSaved) => {
@@ -69,7 +69,12 @@ function readDesktopsUser(req: Request, res: Response) {
 function readDesktops(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
 
-    Desktop.find({ id_company: idCompany }).populate('id_assistant').then(desktopsDB => {
+    Desktop.find({ id_company: idCompany })
+    .populate({ path: 'id_session', 
+         populate: { path: 'id_assistant'}
+    })
+
+    .then(desktopsDB => {
         if (!desktopsDB) {
             return res.status(400).json({
                 ok: false,
@@ -114,17 +119,20 @@ function takeDesktop(req: Request, res: Response) {
     let idDesktop = req.body.idDesktop;
     let idAssistant = req.body.idAssistant;
 
-    // actualizo el escritorio
-    Desktop.findByIdAndUpdate(idDesktop, { id_assistant: idAssistant }).then(desktopTaked => {
+    // actualizo el estado del escritorio
+    var session = new Session({
+        id_desktop: idDesktop,
+        id_assistant: idAssistant,
+        fc_start: + new Date().getTime(),
+        fc_end: null
+    });
 
-        // actualizo el estado del escritorio
-        var desktop_session = new DeskStat({
-            id_desktop: idDesktop,
-            id_assistant: idAssistant,
-            fc_start: + new Date().getTime()
-        });
+    session.save().then(sessionSaved => {
 
-        desktop_session.save().then((sessionSaved) => {
+        // actualizo el escritorio
+        Desktop.findByIdAndUpdate(idDesktop, { id_session: sessionSaved._id }, {new: true})
+        .populate('id_session')
+        .then(desktopTaked => {
 
             return res.status(200).json({
                 ok: true,
@@ -135,18 +143,20 @@ function takeDesktop(req: Request, res: Response) {
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al guardar la sesion del escritorio',
+                msg: 'Error al registrar la sesión en el escritorio',
                 desktop: null
             });
-        });
+        })
+
 
     }).catch(() => {
         return res.status(500).json({
             ok: false,
-            msg: 'Error al intentar tomar el escritorio',
+            msg: 'Error al guardar la sesion del escritorio',
             desktop: null
         });
-    })
+    });
+
 
 
 
@@ -156,7 +166,7 @@ function releaseDesktop(req: Request, res: Response) {
 
     let idDesktop = req.body.idDesktop;
 
-    Desktop.findByIdAndUpdate(idDesktop, { id_assistant: null }).then(desktopUpdated => {
+    Desktop.findByIdAndUpdate(idDesktop, { id_session: null }).then(desktopUpdated => {
 
         if (!desktopUpdated) {
             return res.status(400).json({
@@ -166,25 +176,22 @@ function releaseDesktop(req: Request, res: Response) {
             })
         }
 
-        DeskStat.findOneAndUpdate({
-            id_desktop: idDesktop,
-            id_assistant: desktopUpdated.id_assistant,
-            fc_end: null
-        }, { fc_end: + new Date().getTime() }).then(desktopReleased => {
+        Session.findByIdAndUpdate(desktopUpdated.id_session,
+            { fc_end: + new Date().getTime() }).then(desktopReleased => {
 
-            return res.status(200).json({
-                ok: true,
-                msg: 'Esctirorio finalizado correctamente',
-                desktop: desktopReleased
-            })
+                return res.status(200).json({
+                    ok: true,
+                    msg: 'Esctirorio finalizado correctamente',
+                    desktop: desktopReleased
+                })
 
-        }).catch(() => {
-            return res.status(400).json({
-                ok: true,
-                msg: 'Error al guardar la sesion del escritorio',
-                desktop: null
+            }).catch(() => {
+                return res.status(400).json({
+                    ok: true,
+                    msg: 'Error al guardar la sesion del escritorio',
+                    desktop: null
+                })
             })
-        })
 
 
     }).catch(() => {

@@ -1,6 +1,6 @@
 "use strict";
 const desktop_model_1 = require("../models/desktop.model");
-const deskstat_model_1 = require("../models/deskstat.model");
+const session_model_1 = require("../models/session.model");
 const company_model_1 = require("../models/company.model");
 // ========================================================
 // Desktop Methods
@@ -10,7 +10,7 @@ function createDesktop(req, res) {
     var desktop = new desktop_model_1.Desktop({
         id_company: body.id_company,
         cd_desktop: body.cd_desktop,
-        id_assistant: body.id_assistant
+        id_session: null
     });
     desktop.save().then((desktopSaved) => {
         res.status(200).json({
@@ -61,7 +61,11 @@ function readDesktopsUser(req, res) {
 }
 function readDesktops(req, res) {
     let idCompany = req.params.idCompany;
-    desktop_model_1.Desktop.find({ id_company: idCompany }).populate('id_assistant').then(desktopsDB => {
+    desktop_model_1.Desktop.find({ id_company: idCompany })
+        .populate({ path: 'id_session',
+        populate: { path: 'id_assistant' }
+    })
+        .then(desktopsDB => {
         if (!desktopsDB) {
             return res.status(400).json({
                 ok: false,
@@ -101,15 +105,18 @@ function deleteDesktop(req, res) {
 function takeDesktop(req, res) {
     let idDesktop = req.body.idDesktop;
     let idAssistant = req.body.idAssistant;
-    // actualizo el escritorio
-    desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_assistant: idAssistant }).then(desktopTaked => {
-        // actualizo el estado del escritorio
-        var desktop_session = new deskstat_model_1.DeskStat({
-            id_desktop: idDesktop,
-            id_assistant: idAssistant,
-            fc_start: +new Date().getTime()
-        });
-        desktop_session.save().then((sessionSaved) => {
+    // actualizo el estado del escritorio
+    var session = new session_model_1.Session({
+        id_desktop: idDesktop,
+        id_assistant: idAssistant,
+        fc_start: +new Date().getTime(),
+        fc_end: null
+    });
+    session.save().then(sessionSaved => {
+        // actualizo el escritorio
+        desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_session: sessionSaved._id }, { new: true })
+            .populate('id_session')
+            .then(desktopTaked => {
             return res.status(200).json({
                 ok: true,
                 msg: 'Se asigno el asistente al escritorio',
@@ -118,21 +125,21 @@ function takeDesktop(req, res) {
         }).catch(() => {
             return res.status(500).json({
                 ok: false,
-                msg: 'Error al guardar la sesion del escritorio',
+                msg: 'Error al registrar la sesión en el escritorio',
                 desktop: null
             });
         });
     }).catch(() => {
         return res.status(500).json({
             ok: false,
-            msg: 'Error al intentar tomar el escritorio',
+            msg: 'Error al guardar la sesion del escritorio',
             desktop: null
         });
     });
 }
 function releaseDesktop(req, res) {
     let idDesktop = req.body.idDesktop;
-    desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_assistant: null }).then(desktopUpdated => {
+    desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_session: null }).then(desktopUpdated => {
         if (!desktopUpdated) {
             return res.status(400).json({
                 ok: false,
@@ -140,11 +147,7 @@ function releaseDesktop(req, res) {
                 desktop: null
             });
         }
-        deskstat_model_1.DeskStat.findOneAndUpdate({
-            id_desktop: idDesktop,
-            id_assistant: desktopUpdated.id_assistant,
-            fc_end: null
-        }, { fc_end: +new Date().getTime() }).then(desktopReleased => {
+        session_model_1.Session.findByIdAndUpdate(desktopUpdated.id_session, { fc_end: +new Date().getTime() }).then(desktopReleased => {
             return res.status(200).json({
                 ok: true,
                 msg: 'Esctirorio finalizado correctamente',
