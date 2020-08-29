@@ -9,7 +9,7 @@ import MetricController from '../controllers/metric.controller';
 // ROUTES
 const metricRoutes = Router();
 
-metricRoutes.get('/gettickets/:idUser', mdAuth.verificaToken, MetricController.getTickets);
+metricRoutes.post('/getusermetrics', mdAuth.verificaToken, MetricController.getUserMetrics);
 
 
 

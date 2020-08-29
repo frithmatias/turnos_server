@@ -159,13 +159,21 @@ function takeTicket(req: Request, res: Response) {
 
 	const server = Server.instance;
 	const { idSession, idSocketDesk } = req.body;
-	
+
 	Session.findById(idSession).then(sessionDB => {
 
 		if (!sessionDB) {
 			return res.status(400).json({
 				ok: false,
 				msg: 'No existe la sesión del escritorio',
+				session: null
+			});
+		}
+
+		if (sessionDB.fc_end) {
+			return res.status(400).json({
+				ok: false,
+				msg: 'La sesión del escritorio ya finalizó',
 				session: null
 			});
 		}
@@ -190,62 +198,62 @@ function takeTicket(req: Request, res: Response) {
 					});
 				}
 
-				if (assistantDB) {
+				if (assistantDB.id_company !== desktopDB.id_company) {
+					return res.status(400).json({
+						ok: false,
+						msg: 'El usuario y el escritorio no pertenecen a la misma empresa',
+						assistant: null
+					});
+				}
+				// Se obtuvo la sesión, el asistente y el escritorio
+				// Busco un nuevo ticket para atender
+				Ticket.findOne({
+					id_company: assistantDB.id_company,
+					id_skill: { $in: assistantDB.id_skills },
+					id_session: null,
+					tm_end: null
+				})
+					.sort({ bl_priority: -1, tm_start: 1 }) // priority true first
+					// .limit(1)
+					.then(ticketDB => {
 
-					// Busco un nuevo ticket para atender
-					Ticket.findOne({
-						id_company: assistantDB.id_company,
-						id_skill: { $in: assistantDB.id_skills },
-						id_session: null,
-						tm_end: null
-					})
-						.sort({ bl_priority: -1, tm_start: 1 }) // priority true first
-						// .limit(1)
-						.then(ticketDB => {
-
-							if (!ticketDB) {
-								return res.status(200).json({
-									ok: false,
-									msg: 'No existen tickets pendientes.',
-									ticket: null
-								})
-							}
-
-							if (ticketDB) {
-
-								ticketDB.tm_att = + new Date().getTime();
-								ticketDB.id_session = idSession;
-								ticketDB.id_socket_desk = idSocketDesk;
-								ticketDB.save().then(ticketSaved => {
-
-									server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${desktopDB.cd_desktop} por ${assistantDB.tx_name} ` });
-									//server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); // para clientes
-									if (ticketSaved?.id_company) { server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); }
-
-									return res.status(200).json({
-										ok: true,
-										msg: 'Ticket obtenido correctamente',
-										ticket: ticketDB
-									});
-
-								}).catch(() => {
-									return res.status(400).json({
-										ok: false,
-										msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
-										ticket: null
-									});
-								})
-
-							}
-
-						}).catch(() => {
-							return res.status(500).json({
+						if (!ticketDB) {
+							return res.status(200).json({
 								ok: false,
-								msg: 'Error al consultar el ticket',
+								msg: 'No existen tickets pendientes.',
 								ticket: null
 							})
+						}
+
+						ticketDB.tm_att = + new Date().getTime();
+						ticketDB.id_session = idSession;
+						ticketDB.id_socket_desk = idSocketDesk;
+
+						ticketDB.save().then(ticketSaved => {
+
+							server.io.to(ticketSaved.id_socket).emit('mensaje-privado', { msg: `Usted fue llamado desde el escritorio ${desktopDB.cd_desktop} por ${assistantDB.tx_name} ` });
+							if (ticketSaved?.id_company) { server.io.to(ticketSaved.id_company).emit('actualizar-pantalla'); }
+
+							return res.status(200).json({
+								ok: true,
+								msg: 'Ticket obtenido correctamente',
+								ticket: ticketSaved
+							});
+
+						}).catch(() => {
+							return res.status(400).json({
+								ok: false,
+								msg: 'Se encontro un ticket pero sucedió un error al actualizarlo',
+								ticket: null
+							});
 						})
-				}
+					}).catch(() => {
+						return res.status(500).json({
+							ok: false,
+							msg: 'Error al consultar el ticket',
+							ticket: null
+						})
+					})
 			}).catch(() => {
 				return res.status(500).json({
 					ok: false,
@@ -506,8 +514,10 @@ function endTicket(req: Request, res: Response) {
 function getTickets(req: Request, res: Response) {
 	const idCompany = req.params.id_company;
 	Ticket.find({ id_company: idCompany })
-		.populate({path: 'id_session', 
-				populate: {path: 'id_assistant id_desktop'}})
+		.populate({
+			path: 'id_session',
+			populate: { path: 'id_assistant id_desktop' }
+		})
 		.populate('id_skill')
 		.then((tickets) => {
 

@@ -10,5 +10,5 @@ const auth_1 = __importDefault(require("../middlewares/auth"));
 const metric_controller_1 = __importDefault(require("../controllers/metric.controller"));
 // ROUTES
 const metricRoutes = express_1.Router();
-metricRoutes.get('/gettickets/:idUser', auth_1.default.verificaToken, metric_controller_1.default.getTickets);
+metricRoutes.post('/getusermetrics', auth_1.default.verificaToken, metric_controller_1.default.getUserMetrics);
 exports.default = metricRoutes;

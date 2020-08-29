@@ -266,7 +266,7 @@ function obtenerMenu(id_role) {
             submenu: [
                 { titulo: "Home", url: "/admin/home", icon: "home" },
                 { titulo: "Mi Perfil", url: "/admin/profile", icon: "face" },
-                { titulo: "Comercios", url: "/admin/companies", icon: "store" },
+                { titulo: "Comercios", url: "/admin/companies", icon: "add_business" },
                 { titulo: "Asistentes", url: "/admin/assistants", icon: "headset_mic" },
                 { titulo: "Escritorios", url: "/admin/desktops", icon: "important_devices" },
                 { titulo: "Skills", url: "/admin/skills", icon: "playlist_add_check" },
