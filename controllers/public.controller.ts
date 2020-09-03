@@ -72,7 +72,7 @@ function postScore(req: Request, res: Response) {
     return res.status(200).json({
       ok: true,
       msg: 'Las calificaciones fueron guardadas con éxito',
-      socres: scoresSaved
+      scores: scoresSaved
     })
 
   })

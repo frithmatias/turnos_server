@@ -59,7 +59,7 @@ function postScore(req, res) {
         return res.status(200).json({
             ok: true,
             msg: 'Las calificaciones fueron guardadas con éxito',
-            socres: scoresSaved
+            scores: scoresSaved
         });
     });
     // contact.tx_type = req.body.tx_type;
