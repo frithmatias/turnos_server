@@ -24,28 +24,41 @@ function createCompany(req, res) {
         const skill = new skill_model_1.Skill();
         skill.id_company = companySaved._id;
         skill.cd_skill = 'T';
-        skill.tx_skill = 'DEFAULT_SKILL';
+        skill.tx_skill = 'ATENCION A CLIENTES';
         skill.bl_generic = true;
+        // create generic desktop for this company 
+        const desktop = new desktop_model_1.Desktop();
+        desktop.id_company = companySaved._id;
+        desktop.cd_desktop = 'GENERAL';
+        desktop.id_session = null;
+        desktop.bl_generic = true;
         skill.save().then((skillSaved) => {
-            // assign this generic skill for the user
-            const skills = [skillSaved._id];
-            user_model_1.User.findByIdAndUpdate(body.company.id_user, { id_skills: skills }).then(() => {
-                return res.status(200).json({
-                    ok: true,
-                    msg: 'Empresa creada correctamente',
-                    company: companySaved
+            desktop.save().then((desktopSaved) => {
+                // push generic skill to previous skills for this user
+                user_model_1.User.findByIdAndUpdate(body.company.id_user, { $push: { id_skills: skillSaved._id } }).then((userDB) => {
+                    return res.status(200).json({
+                        ok: true,
+                        msg: 'Empresa creada correctamente',
+                        company: companySaved
+                    });
+                }).catch(() => {
+                    return res.status(400).json({
+                        ok: true,
+                        msg: 'Se genero la companía y el skill genérico, pero hubo un error al asignar el skill al usuario',
+                        company: companySaved
+                    });
                 });
-            }).catch(() => {
+            }).catch((err) => {
                 return res.status(400).json({
-                    ok: true,
-                    msg: 'Se genero la companía y el skill genérico, pero hubo un error al asignar el skill al usuario',
-                    company: companySaved
+                    ok: false,
+                    msg: 'Error al guardar el escritorio por defecto',
+                    company: null
                 });
             });
         }).catch((err) => {
             return res.status(400).json({
                 ok: false,
-                msg: err,
+                msg: 'Error al guardar el skill por defecto',
                 company: null
             });
         });

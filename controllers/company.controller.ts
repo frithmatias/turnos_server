@@ -28,14 +28,22 @@ function createCompany(req: Request, res: Response) {
     const skill = new Skill();
     skill.id_company = companySaved._id;
     skill.cd_skill = 'T';
-    skill.tx_skill = 'DEFAULT_SKILL';
+    skill.tx_skill = 'ATENCION A CLIENTES';
     skill.bl_generic = true;
-    skill.save().then((skillSaved) => {
 
-      // assign this generic skill for the user
-      const skills = [skillSaved._id];
-      User.findByIdAndUpdate(body.company.id_user, {id_skills: skills}).then(()=>{
-  
+    // create generic desktop for this company 
+    const desktop = new Desktop();
+    desktop.id_company = companySaved._id;
+    desktop.cd_desktop = 'GENERAL';
+    desktop.id_session = null;
+    desktop.bl_generic = true;
+    
+
+    skill.save().then((skillSaved) => {
+      desktop.save().then((desktopSaved) => {
+      // push generic skill to previous skills for this user
+      User.findByIdAndUpdate(body.company.id_user, {$push: {id_skills: skillSaved._id}}).then((userDB)=>{
+              
         return res.status(200).json({
           ok: true,
           msg: 'Empresa creada correctamente',
@@ -55,7 +63,15 @@ function createCompany(req: Request, res: Response) {
     }).catch((err)=>{
       return res.status(400).json({
         ok: false,
-        msg: err,
+        msg: 'Error al guardar el escritorio por defecto',
+        company: null
+      })
+    })
+
+    }).catch((err)=>{
+      return res.status(400).json({
+        ok: false,
+        msg: 'Error al guardar el skill por defecto',
         company: null
       })
     })
