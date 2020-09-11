@@ -10,6 +10,18 @@ import { Company } from '../models/company.model';
 function createDesktop(req: Request, res: Response) {
 
     var body = req.body;
+
+
+
+    // if has a default desktop then remove it
+    Desktop.findOneAndDelete({ id_company: body.id_company, bl_generic: true }).catch(() => {
+        return res.status(400).json({
+            ok: true,
+            msg: 'Error al eliminar el escritorio genérico',
+            skill: null
+        })
+    })
+
     var desktop = new Desktop({
         id_company: body.id_company,
         cd_desktop: body.cd_desktop,
@@ -70,48 +82,79 @@ function readDesktops(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
 
     Desktop.find({ id_company: idCompany })
-    .populate({ path: 'id_session', 
-         populate: { path: 'id_assistant'}
-    })
+        .populate({
+            path: 'id_session',
+            populate: { path: 'id_assistant' }
+        })
 
-    .then(desktopsDB => {
-        if (!desktopsDB) {
-            return res.status(400).json({
+        .then(desktopsDB => {
+            if (!desktopsDB) {
+                return res.status(400).json({
+                    ok: false,
+                    msg: 'No existen escritorios para la empresa seleccionada',
+                    desktops: null
+                })
+            }
+            return res.status(200).json({
+                ok: true,
+                msg: 'Escritorios obtenidos correctamente',
+                desktops: desktopsDB
+            })
+        }).catch(() => {
+            return res.status(500).json({
                 ok: false,
-                msg: 'No existen escritorios para la empresa seleccionada',
+                msg: 'Error al consultar los escritorios para las empresas del user',
                 desktops: null
             })
-        }
-        return res.status(200).json({
-            ok: true,
-            msg: 'Escritorios obtenidos correctamente',
-            desktops: desktopsDB
-        })
-    }).catch(() => {
-        return res.status(500).json({
-            ok: false,
-            msg: 'Error al consultar los escritorios para las empresas del user',
-            desktops: null
-        })
 
-    })
+        })
 }
 
 function deleteDesktop(req: Request, res: Response) {
     let idDesktop = req.params.idDesktop;
-    Desktop.findByIdAndDelete(idDesktop).then((desktopDeleted) => {
-        res.status(200).json({
-            ok: true,
-            msg: 'Escritorio eliminado correctamente',
-            desktop: desktopDeleted
-        })
-    }).catch(() => {
-        res.status(400).json({
-            ok: false,
-            msg: 'Error al eliminar el escritorio',
-            desktop: null
-        })
-    })
+    Desktop.findById(idDesktop).then(desktopDB => {
+        Desktop.find({ id_company: desktopDB?.id_company }).then(desktopsDB => {
+
+            // si queda un solo escritorio, antes de borrarlo creo un genérico.
+            let generics = desktopsDB.filter(desktop => desktop.bl_generic === true).length;
+            let customs = desktopsDB.filter(desktop => desktop.bl_generic === false).length;
+            if (customs === 1 && generics === 0) { // antes de borrar el último creo el genérico
+                const desktop = new Desktop();
+                desktop.id_company = desktopDB?.id_company;
+                desktop.cd_desktop = '1';
+                desktop.id_session = null;
+                desktop.bl_generic = true;
+                desktop.save().catch(() => {
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No se elimino el ultimo escritorio porque no se pudo crear el genérico.',
+                        skill: null
+                    })
+                })
+            }
+
+            Desktop.findByIdAndDelete(idDesktop).then((desktopDeleted) => {
+                res.status(200).json({
+                    ok: true,
+                    msg: 'Escritorio eliminado correctamente',
+                    desktop: desktopDeleted
+                })
+            }).catch(() => {
+                res.status(400).json({
+                    ok: false,
+                    msg: 'Error al eliminar el escritorio',
+                    desktop: null
+                })
+            })
+
+
+
+
+        });
+    });
+
+
+
 }
 
 function takeDesktop(req: Request, res: Response) {
@@ -130,23 +173,26 @@ function takeDesktop(req: Request, res: Response) {
     session.save().then(sessionSaved => {
 
         // actualizo el escritorio
-        Desktop.findByIdAndUpdate(idDesktop, { id_session: sessionSaved._id }, {new: true})
-        .populate('id_session')
-        .then(desktopTaked => {
+        Desktop.findByIdAndUpdate(idDesktop, { id_session: sessionSaved._id }, { new: true })
+            .populate({
+                path: 'id_session',
+                populate: { path: 'id_assistant id_desktop' }
+            })
+            .then(desktopTaked => {
 
-            return res.status(200).json({
-                ok: true,
-                msg: 'Se asigno el asistente al escritorio',
-                desktop: desktopTaked
-            });
+                return res.status(200).json({
+                    ok: true,
+                    msg: 'Se asigno el asistente al escritorio',
+                    desktop: desktopTaked
+                });
 
-        }).catch(() => {
-            return res.status(500).json({
-                ok: false,
-                msg: 'Error al registrar la sesión en el escritorio',
-                desktop: null
-            });
-        })
+            }).catch(() => {
+                return res.status(500).json({
+                    ok: false,
+                    msg: 'Error al registrar la sesión en el escritorio',
+                    desktop: null
+                });
+            })
 
 
     }).catch(() => {

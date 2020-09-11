@@ -2,9 +2,10 @@ import { Request, Response } from 'express';
 import { User } from '../models/user.model';
 import bcrypt from 'bcrypt';
 import { Company } from '../models/company.model';
+import { Session } from '../models/session.model';
 
 // ========================================================
-// Assistant Methods
+// Assistant && Session Methods
 // ========================================================
 
 function createAssistant(req: Request, res: Response) {
@@ -38,6 +39,8 @@ function createAssistant(req: Request, res: Response) {
 }
 
 function readAssistantsUser(req: Request, res: Response) {
+    // obtiene todos los asistentes de todas las empresas de un usuario
+
     let idUser = req.params.idUser;
     Company.find({ id_user: idUser }).then(companiesDB => {
         return companiesDB.map(data => data._id) // solo quiero los _id
@@ -102,6 +105,35 @@ function readAssistants(req: Request, res: Response) {
 
 }
 
+function readActiveSessionsBySkill(req: Request, res: Response) {
+    let idSkill = req.params.idSkill;
+    let today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+    User.find({ id_skills: { $elemMatch: idSkill } }).then(companiesDB => {
+        return companiesDB.map(data => data._id) // solo quiero un array con los _id
+    }).then(idUsers => {
+        Session.find({fc_start: {$gt: today}, fc_end: null, id_assistant: {$in: idUsers}}).then(sessionsDB => {
+            return res.status(200).json({
+                ok: true,
+                msg: 'Sesiones obtenidas correctamente',
+                sessions: sessionsDB
+            })
+        }).catch(() => {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Error al consultar las sesiones activas para los usuarios con el skill indicado',
+                sessions: null
+            })
+        })
+    }).catch(() => {
+        return res.status(400).json({
+            ok: false,
+            msg: 'Error al consultar los usuarios con el skill indicado',
+            sessions: null
+        })
+    })
+
+
+}
 
 function updateAssistant(req: Request, res: Response) {
 
@@ -117,22 +149,22 @@ function updateAssistant(req: Request, res: Response) {
 
     if (body.tx_password !== '******') { user.tx_password = bcrypt.hashSync(body.tx_password, 10); }
 
-    User.findByIdAndUpdate(body._id, user, {new: true})
-    .populate('id_skills')
-    .populate('id_company')
-    .then(userDB => {
-        return res.status(200).json({
-            ok: true,
-            msg: 'Se actualizo el asistente correctamente',
-            user: userDB
+    User.findByIdAndUpdate(body._id, user, { new: true })
+        .populate('id_skills')
+        .populate('id_company')
+        .then(userDB => {
+            return res.status(200).json({
+                ok: true,
+                msg: 'Se actualizo el asistente correctamente',
+                user: userDB
+            })
+        }).catch(() => {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Ocurrio un error al actualizar el asistente',
+                user: null
+            })
         })
-    }).catch(() => {
-        return res.status(400).json({
-            ok: false,
-            msg: 'Ocurrio un error al actualizar el asistente',
-            user: null
-        })
-    })
 }
 
 function deleteAssistant(req: Request, res: Response) {
@@ -154,8 +186,9 @@ function deleteAssistant(req: Request, res: Response) {
 
 export = {
     createAssistant,
-    readAssistantsUser,
     readAssistants,
+    readAssistantsUser,
+    readActiveSessionsBySkill,
     updateAssistant,
     deleteAssistant,
 }

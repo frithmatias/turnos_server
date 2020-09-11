@@ -270,7 +270,6 @@ function takeTicket(req, res) {
                 session: null
             });
         }
-        console.log(sessionDB);
         if (sessionDB.fc_end) {
             return res.status(400).json({
                 ok: false,
@@ -422,7 +421,6 @@ function getTickets(req, res) {
     let month = +new Date().getMonth();
     let day = +new Date().getDate();
     let time = +new Date(year, month, day).getTime();
-    console.log(year, month, day, time);
     ticket_model_1.Ticket.find({
         id_company: idCompany,
         tm_start: { $gt: time } // only from today

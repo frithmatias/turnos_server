@@ -1,4 +1,15 @@
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -25,12 +36,19 @@ const userSchema = new mongoose_1.Schema({
 userSchema.method('checkPassword', function (pass = '') {
     // Aca es muy importante NO USAR función de flecha sino una función tradicional
     // para no perder la referencia al THIS que apunta al objeto const userSchema = new Schema({})
-    if (bcrypt_1.default.compareSync(pass, this.password)) {
+    if (bcrypt_1.default.compareSync(pass, this.tx_password)) {
         return true;
     }
     else {
         return false;
     }
+});
+userSchema.method('getData', function () {
+    // Aca es muy importante NO USAR función de flecha sino una función tradicional
+    // para no perder la referencia al THIS que apunta al objeto const userSchema = new Schema({})
+    const _a = this.toJSON(), { __v, _id, tx_password } = _a, object = __rest(_a, ["__v", "_id", "tx_password"]);
+    object.uid = _id;
+    return object;
 });
 userSchema.plugin(mongoose_unique_validator_1.default, { message: 'El campo {PATH} debe de ser unico' });
 exports.User = mongoose_1.model('User', userSchema);

@@ -19,8 +19,5 @@ export const escucharMensajes = (cliente: Socket, io: socketIO.Server) => {
 	cliente.on('mensaje-privado', (payload: { to: string, msg: string }) => {
 		io.to(payload.to).emit('mensaje-privado', payload);
 	});
-
-
-
 };
 

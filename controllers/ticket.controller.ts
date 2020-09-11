@@ -337,7 +337,6 @@ function takeTicket(req: Request, res: Response) {
 				session: null
 			});
 		}
-		console.log(sessionDB)
 		if (sessionDB.fc_end) {
 			return res.status(400).json({
 				ok: false,
@@ -347,7 +346,6 @@ function takeTicket(req: Request, res: Response) {
 		}
 
 		Desktop.findById(sessionDB?.id_desktop).then(desktopDB => {
-
 			if (!desktopDB) {
 				return res.status(400).json({
 					ok: false,
@@ -357,7 +355,6 @@ function takeTicket(req: Request, res: Response) {
 			}
 
 			User.findById(sessionDB.id_assistant).then(assistantDB => {
-
 				if (!assistantDB) {
 					return res.status(400).json({
 						ok: false,
@@ -389,7 +386,6 @@ function takeTicket(req: Request, res: Response) {
 					.sort({ bl_priority: -1, tm_start: 1 }) // priority true first
 					// .limit(1)
 					.then(ticketDB => {
-
 						if (!ticketDB) {
 							return res.status(200).json({
 								ok: false,
@@ -501,8 +497,6 @@ function getTickets(req: Request, res: Response) {
 	let month = + new Date().getMonth();
 	let day = + new Date().getDate();
 	let time = + new Date(year, month, day).getTime();
-
-	console.log(year, month, day, time)
 
 	Ticket.find({ 
 		id_company: idCompany, // only this company

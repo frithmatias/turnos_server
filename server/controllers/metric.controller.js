@@ -41,7 +41,6 @@ function getUserMetrics(req, res) {
                     metrics: { tickets: ticketsDB, total: scoresDB[0].total, avg: scoresDB[0].avg }
                 });
             }).catch((err) => {
-                console.log(err);
                 return res.status(200).json({
                     ok: true,
                     msg: 'No existen puntuaciones para las metricas',

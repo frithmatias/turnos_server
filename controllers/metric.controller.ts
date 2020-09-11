@@ -51,7 +51,6 @@ function getUserMetrics(req: Request, res: Response) {
                     })
 
                 }).catch((err)=> {
-                    console.log(err);
                     return res.status(200).json({
                         ok: true,
                         msg: 'No existen puntuaciones para las metricas',

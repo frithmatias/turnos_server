@@ -12,37 +12,36 @@ function createSkill(req: Request, res: Response) {
 
     var body = req.body;
 
+    // if has a default skill then remove it
+    Skill.findOneAndDelete({ id_company: body.id_company, bl_generic: true }).catch(() => {
+        return res.status(400).json({
+            ok: true,
+            msg: 'Error al eliminar el skill genérico',
+            skill: null
+        })
+    })
+
     var skill = new Skill({
         id_company: body.id_company,
         cd_skill: body.cd_skill,
         tx_skill: body.tx_skill,
-        bl_generic: body.bl_generic
+        bl_generic: false
     });
 
-    if (body.bl_generic) {
-        skill.cd_skill = 'T';
-        skill.tx_skill = 'DEFAULT_SKILL'
-    }
-
     skill.save().then((skillSaved) => {
-
         Company.findById(body.id_company).then(companyDB => {
             User.findByIdAndUpdate(companyDB?.id_user, { $push: { id_skills: skillSaved._id } }).then(() => {
-
                 res.status(200).json({
                     ok: true,
                     msg: 'Skill guardado correctamente',
                     skill: skillSaved
                 })
-
             }).catch((err) => {
-
                 res.status(400).json({
                     ok: true,
                     msg: 'Error al asignar el skill al usuario',
                     skill: null
                 })
-
             })
         })
     }).catch((err) => {
@@ -119,23 +118,52 @@ function deleteSkill(req: Request, res: Response) {
     let idSkill = req.params.idSkill;
 
 
+
     Skill.findById(idSkill).then(skillDB => {
+        // get company to get user
         Company.findById(skillDB?.id_company).then(companyDB => {
-            // elimino el skill del usuario
+            // elimino el skill del array de skills asignados al usuario
             User.findByIdAndUpdate(companyDB?.id_user, { $pull: { id_skills: idSkill } }).then(userUpdated => {
                 // elimino el skill
-                Skill.findByIdAndDelete(idSkill).then((skillDeleted) => {
-                    res.status(200).json({
-                        ok: true,
-                        msg: 'Skill eliminado correctamente',
-                        skill: skillDeleted
+
+                // si queda un solo skill, antes de borrarlo creo un genérico.
+                Skill.find({ id_company: skillDB?.id_company }).then(skillsDB => {
+                    let generics = skillsDB.filter(skill => skill.bl_generic === true).length;
+                    let customs = skillsDB.filter(skill => skill.bl_generic === false).length;
+                    if (customs === 1 && generics === 0) { // antes de borrar el último creo el genérico
+
+                        var skill = new Skill({
+                            id_company: skillDB?.id_company,
+                            cd_skill: 'T',
+                            tx_skill: 'ATENCION GENERAL',
+                            bl_generic: true
+                        });
+
+                        skill.save().catch(() => {
+                            return res.status(400).json({
+                                ok: false,
+                                msg: 'No se elimino el ultimo skill porque no se pudo crear el genérico.',
+                                skill: null
+                            })
+                        })
+                    }
+
+                    Skill.findByIdAndDelete(idSkill).then((skillDeleted) => {
+                        res.status(200).json({
+                            ok: true,
+                            msg: 'Skill eliminado correctamente',
+                            skill: skillDeleted
+                        })
+                    }).catch(() => {
+                        res.status(400).json({
+                            ok: false,
+                            msg: 'Error al eliminar el skill',
+                            skill: null
+                        })
                     })
-                }).catch(() => {
-                    res.status(400).json({
-                        ok: false,
-                        msg: 'Error al eliminar el skill',
-                        skill: null
-                    })
+
+
+
                 })
 
             }).catch(() => {
@@ -162,6 +190,7 @@ function deleteSkill(req: Request, res: Response) {
 
 
 }
+
 
 export = {
     createSkill,

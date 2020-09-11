@@ -24,12 +24,12 @@ function createCompany(req, res) {
         const skill = new skill_model_1.Skill();
         skill.id_company = companySaved._id;
         skill.cd_skill = 'T';
-        skill.tx_skill = 'ATENCION A CLIENTES';
+        skill.tx_skill = 'ATENCION GENERAL';
         skill.bl_generic = true;
         // create generic desktop for this company 
         const desktop = new desktop_model_1.Desktop();
         desktop.id_company = companySaved._id;
-        desktop.cd_desktop = 'GENERAL';
+        desktop.cd_desktop = '1';
         desktop.id_session = null;
         desktop.bl_generic = true;
         skill.save().then((skillSaved) => {

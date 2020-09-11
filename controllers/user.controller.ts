@@ -297,11 +297,11 @@ function obtenerMenu(id_role: string) {
   if ((id_role === "ASSISTANT_ROLE") || (id_role === "ADMIN_ROLE")) {
     menu.push({
       titulo: "Asistente",
-      icon: "headset_mic",
+      icon: "mdi mdi-headset",
       submenu: [
-        { titulo: "Home", url: "/assistant/home", icon: "home" },
-        { titulo: "Dashboard", url: "/assistant/dashboard", icon: "insights" },
-        { titulo: "Escritorio", url: "/assistant/desktop", icon: "desktop_windows" },
+        { titulo: "Home", url: "/assistant/home", icon: "mdi mdi-home" },
+        { titulo: "Dashboard", url: "/assistant/dashboard", icon: "mdi mdi-monitor-dashboard" },
+        { titulo: "Escritorio", url: "/assistant/desktop", icon: "mdi mdi-monitor-cellphone-star" },
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
   }
@@ -309,16 +309,16 @@ function obtenerMenu(id_role: string) {
   if (id_role === "ADMIN_ROLE") {
     menu.push({
       titulo: "Administrador",
-      icon: "local_police",
+      icon: "mdi mdi-police-badge-outline",
       submenu: [
         { titulo: "Home", url: "/admin/home", icon: "home" },
-        { titulo: "Mi Perfil", url: "/admin/profile", icon: "face" },
-        { titulo: "Comercios", url: "/admin/companies", icon: "add_business" },
-        { titulo: "Asistentes", url: "/admin/assistants", icon: "headset_mic" },
-        { titulo: "Escritorios", url: "/admin/desktops", icon: "important_devices" },
-        { titulo: "Skills", url: "/admin/skills", icon: "playlist_add_check" },
-        { titulo: "Turnos", url: "/admin/tickets", icon: "bookmark" },
-        { titulo: "Dashboard", url: "/admin/dashboard", icon: "insights" },
+        { titulo: "Mi Perfil", url: "/admin/profile", icon: "mdi mdi-face" },
+        { titulo: "Comercios", url: "/admin/companies", icon: "mdi mdi-storefront-outline" },
+        { titulo: "Asistentes", url: "/admin/assistants", icon: "mdi mdi-account-multiple-plus-outline" },
+        { titulo: "Escritorios", url: "/admin/desktops", icon: "mdi mdi-monitor-cellphone-star" },
+        { titulo: "Skills", url: "/admin/skills", icon: "mdi mdi-list-status" },
+        { titulo: "Turnos", url: "/admin/tickets", icon: "mdi mdi-bookmark-outline" },
+        { titulo: "Dashboard", url: "/admin/dashboard", icon: "mdi mdi-monitor-dashboard" },
 
       ]
     }); // unshift lo coloca al princio del array, push lo coloca al final.
@@ -327,7 +327,7 @@ function obtenerMenu(id_role: string) {
   if (id_role === "SUPERUSER_ROLE") {
     menu.push({
       titulo: "Super Usuario",
-      icon: "face",
+      icon: "mdi mdi-headset",
       submenu: [
         { titulo: "Usuarios", url: "/superuser/users", icon: "mdi mdi-account-multiple-plus" },
         { titulo: "Empresas", url: "/superuser/company", icon: "mdi mdi-city" },
@@ -342,8 +342,19 @@ function obtenerMenu(id_role: string) {
   return menu;
 }
 
+function testData(req: Request, res: Response) {
+
+  var user = User.findOne({tx_email: 'matiasfrith@gmail.com'}, (err, userDB) => {
+    return res.json({data: userDB?.getData()});
+    
+    
+  })
+  
+
+}
 
 export = {
+  testData,
   createUser,
   attachCompany,
   checkEmailExists,

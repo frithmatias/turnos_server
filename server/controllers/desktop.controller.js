@@ -7,6 +7,14 @@ const company_model_1 = require("../models/company.model");
 // ========================================================
 function createDesktop(req, res) {
     var body = req.body;
+    // if has a default desktop then remove it
+    desktop_model_1.Desktop.findOneAndDelete({ id_company: body.id_company, bl_generic: true }).catch(() => {
+        return res.status(400).json({
+            ok: true,
+            msg: 'Error al eliminar el escritorio genérico',
+            skill: null
+        });
+    });
     var desktop = new desktop_model_1.Desktop({
         id_company: body.id_company,
         cd_desktop: body.cd_desktop,
@@ -62,7 +70,8 @@ function readDesktopsUser(req, res) {
 function readDesktops(req, res) {
     let idCompany = req.params.idCompany;
     desktop_model_1.Desktop.find({ id_company: idCompany })
-        .populate({ path: 'id_session',
+        .populate({
+        path: 'id_session',
         populate: { path: 'id_assistant' }
     })
         .then(desktopsDB => {
@@ -88,17 +97,38 @@ function readDesktops(req, res) {
 }
 function deleteDesktop(req, res) {
     let idDesktop = req.params.idDesktop;
-    desktop_model_1.Desktop.findByIdAndDelete(idDesktop).then((desktopDeleted) => {
-        res.status(200).json({
-            ok: true,
-            msg: 'Escritorio eliminado correctamente',
-            desktop: desktopDeleted
-        });
-    }).catch(() => {
-        res.status(400).json({
-            ok: false,
-            msg: 'Error al eliminar el escritorio',
-            desktop: null
+    desktop_model_1.Desktop.findById(idDesktop).then(desktopDB => {
+        desktop_model_1.Desktop.find({ id_company: desktopDB === null || desktopDB === void 0 ? void 0 : desktopDB.id_company }).then(desktopsDB => {
+            // si queda un solo escritorio, antes de borrarlo creo un genérico.
+            let generics = desktopsDB.filter(desktop => desktop.bl_generic === true).length;
+            let customs = desktopsDB.filter(desktop => desktop.bl_generic === false).length;
+            if (customs === 1 && generics === 0) { // antes de borrar el último creo el genérico
+                const desktop = new desktop_model_1.Desktop();
+                desktop.id_company = desktopDB === null || desktopDB === void 0 ? void 0 : desktopDB.id_company;
+                desktop.cd_desktop = '1';
+                desktop.id_session = null;
+                desktop.bl_generic = true;
+                desktop.save().catch(() => {
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No se elimino el ultimo escritorio porque no se pudo crear el genérico.',
+                        skill: null
+                    });
+                });
+            }
+            desktop_model_1.Desktop.findByIdAndDelete(idDesktop).then((desktopDeleted) => {
+                res.status(200).json({
+                    ok: true,
+                    msg: 'Escritorio eliminado correctamente',
+                    desktop: desktopDeleted
+                });
+            }).catch(() => {
+                res.status(400).json({
+                    ok: false,
+                    msg: 'Error al eliminar el escritorio',
+                    desktop: null
+                });
+            });
         });
     });
 }
@@ -115,7 +145,10 @@ function takeDesktop(req, res) {
     session.save().then(sessionSaved => {
         // actualizo el escritorio
         desktop_model_1.Desktop.findByIdAndUpdate(idDesktop, { id_session: sessionSaved._id }, { new: true })
-            .populate('id_session')
+            .populate({
+            path: 'id_session',
+            populate: { path: 'id_assistant id_desktop' }
+        })
             .then(desktopTaked => {
             return res.status(200).json({
                 ok: true,

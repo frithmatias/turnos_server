@@ -23,12 +23,23 @@ const userSchema = new Schema({
 userSchema.method('checkPassword', function(this: any, pass: String = ''): boolean {
     // Aca es muy importante NO USAR función de flecha sino una función tradicional
     // para no perder la referencia al THIS que apunta al objeto const userSchema = new Schema({})
-    if (bcrypt.compareSync(pass, this.password)) {
+    if (bcrypt.compareSync(pass, this.tx_password)) {
         return true;
     } else {
         return false;
     }
 });
+
+userSchema.method('getData', function(this: any) {
+    // Aca es muy importante NO USAR función de flecha sino una función tradicional
+    // para no perder la referencia al THIS que apunta al objeto const userSchema = new Schema({})
+        const {__v, _id, tx_password, ...object} = this.toJSON();
+        object.uid = _id;
+        return object;
+});
+
+
+
 
 interface User extends Document {
     tx_name: string;
@@ -41,7 +52,9 @@ interface User extends Document {
     bl_google: boolean;
     fc_lastlogin: Date | null;
     fc_createdat: Date;
+    getData: () => {};
 }
 
 userSchema.plugin( uniqueValidator, {message: 'El campo {PATH} debe de ser unico'} );
 export const User = model<User>('User', userSchema);
+

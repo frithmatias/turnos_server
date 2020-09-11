@@ -63,7 +63,6 @@ function notificationPush(req, res) {
                 .catch(() => {
                 subscriptors--;
                 subscription.remove().then((subscriptionRemoved) => {
-                    console.log('subscription removed', subscriptionRemoved._id);
                 });
             });
         }

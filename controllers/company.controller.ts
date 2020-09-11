@@ -28,13 +28,13 @@ function createCompany(req: Request, res: Response) {
     const skill = new Skill();
     skill.id_company = companySaved._id;
     skill.cd_skill = 'T';
-    skill.tx_skill = 'ATENCION A CLIENTES';
+    skill.tx_skill = 'ATENCION GENERAL';
     skill.bl_generic = true;
 
     // create generic desktop for this company 
     const desktop = new Desktop();
     desktop.id_company = companySaved._id;
-    desktop.cd_desktop = 'GENERAL';
+    desktop.cd_desktop = '1';
     desktop.id_session = null;
     desktop.bl_generic = true;
     

@@ -5,8 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 const user_model_1 = require("../models/user.model");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const company_model_1 = require("../models/company.model");
+const session_model_1 = require("../models/session.model");
 // ========================================================
-// Assistant Methods
+// Assistant && Session Methods
 // ========================================================
 function createAssistant(req, res) {
     var body = req.body;
@@ -35,6 +36,7 @@ function createAssistant(req, res) {
     });
 }
 function readAssistantsUser(req, res) {
+    // obtiene todos los asistentes de todas las empresas de un usuario
     let idUser = req.params.idUser;
     company_model_1.Company.find({ id_user: idUser }).then(companiesDB => {
         return companiesDB.map(data => data._id); // solo quiero los _id
@@ -93,6 +95,33 @@ function readAssistants(req, res) {
         });
     });
 }
+function readActiveSessionsBySkill(req, res) {
+    let idSkill = req.params.idSkill;
+    let today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+    user_model_1.User.find({ id_skills: { $elemMatch: idSkill } }).then(companiesDB => {
+        return companiesDB.map(data => data._id); // solo quiero un array con los _id
+    }).then(idUsers => {
+        session_model_1.Session.find({ fc_start: { $gt: today }, fc_end: null, id_assistant: { $in: idUsers } }).then(sessionsDB => {
+            return res.status(200).json({
+                ok: true,
+                msg: 'Sesiones obtenidas correctamente',
+                sessions: sessionsDB
+            });
+        }).catch(() => {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Error al consultar las sesiones activas para los usuarios con el skill indicado',
+                sessions: null
+            });
+        });
+    }).catch(() => {
+        return res.status(400).json({
+            ok: false,
+            msg: 'Error al consultar los usuarios con el skill indicado',
+            sessions: null
+        });
+    });
+}
 function updateAssistant(req, res) {
     var body = req.body;
     let user = {
@@ -140,8 +169,9 @@ function deleteAssistant(req, res) {
 }
 module.exports = {
     createAssistant,
-    readAssistantsUser,
     readAssistants,
+    readAssistantsUser,
+    readActiveSessionsBySkill,
     updateAssistant,
     deleteAssistant,
 };
