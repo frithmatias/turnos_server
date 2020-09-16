@@ -6,6 +6,7 @@ import environment from '../global/environment';
 
 import { User } from '../models/user.model';
 import { Skill } from '../models/skill.model';
+import { Menu } from '../models/menu.model';
 
 // Google Login
 var GOOGLE_CLIENT_ID = environment.GOOGLE_CLIENT_ID;
@@ -27,7 +28,7 @@ function createUser(req: any, res: Response) {
     bl_google: false,
     fc_lastlogin: null,
     fc_createdat: new Date(),
-    id_role: 'ADMIN_ROLE',
+    tx_role: 'ADMIN_ROLE',
   });
 
   user.save().then((userSaved) => {
@@ -151,17 +152,45 @@ async function loginGoogle(req: Request, res: Response) {
               var token = Token.getJwtToken({ user: userDB });
 
               userDB.updateOne({ fc_lastlogin: + new Date().getTime() })
-                .then(userSaved => {
+                .then(async userSaved => {
 
                   userSaved.tx_password = ":)";
-                  res.status(200).json({
-                    ok: true,
-                    msg: 'Login exitoso',
-                    token: token,
-                    user: userDB,
-                    menu: obtenerMenu(userDB.id_role),
-                    home: '/admin/home'
-                  });
+                  await obtenerMenu(userDB.tx_role, userDB.cd_pricing).then(menu => {
+
+                    let home;
+                    switch (userDB.tx_role) {
+                      case 'ADMIN_ROLE':
+                        home = '/admin/home';
+                        break;
+                      case 'SUPERUSER_ROLE':
+                        home = '/superuser/home';
+                        break;
+                      default:
+                        home = '/admin/role';
+                    };
+
+                    res.status(200).json({
+                      ok: true,
+                      msg: 'Login exitoso',
+                      token: token,
+                      user: userDB,
+                      menu,
+                      home
+                    });
+
+                  }).catch(() => {
+
+                    res.status(500).json({
+                      ok: false,
+                      msg: 'No se pudo obtener el menu del usuario',
+                      token: null,
+                      user: null,
+                      menu: null,
+                      home: null
+                    })
+
+                  })
+
 
                 }).catch((err) => {
 
@@ -185,20 +214,31 @@ async function loginGoogle(req: Request, res: Response) {
             user.bl_google = true;
             user.fc_lastlogin = new Date();
             user.fc_createdat = new Date();
-            user.id_role = 'ADMIN_ROLE';
+            user.tx_role = 'ADMIN_ROLE';
+            user.cd_pricing = 0;
 
-            user.save().then(userSaved => {
+            user.save().then(async userSaved => {
 
-              var token = Token.getJwtToken({ user: userDB });
-              res.status(200).json({
-                ok: true,
-                msg: 'Usuario creado y logueado correctamente',
-                token: token,
-                user,
-                menu: obtenerMenu(userSaved.id_role),
-                home: '/admin/home'
-              });
-
+              var token = Token.getJwtToken({ user });
+              await obtenerMenu(user.tx_role, user.cd_pricing).then(menu => {
+                res.status(200).json({
+                  ok: true,
+                  msg: 'Usuario creado y logueado correctamente',
+                  token: token,
+                  user,
+                  menu,
+                  home: '/admin/home'
+                });
+              }).catch(()=> {
+                res.status(500).json({
+                  ok: false,
+                  msg: 'Error al obtener el menu del usuario',
+                  token: null,
+                  user: null,
+                  menu: null,
+                  home: null
+                });
+              })
             }).catch((err) => {
 
               res.status(500).json({
@@ -256,10 +296,25 @@ function loginUser(req: Request, res: Response) {
       var token = Token.getJwtToken({ user: userDB });
       userDB.fc_lastlogin = new Date();
 
-      userDB.save().then(() => {
+      userDB.save().then(async () => {
 
         userDB.tx_password = ":)";
-        let home = userDB.id_role === 'ADMIN_ROLE' ? '/admin/home' : '/assistant/home';
+
+        let home;
+        switch (userDB.tx_role) {
+          case 'ASSISTANT_ROLE':
+            home = '/assistant/home';
+            break;
+          case 'ADMIN_ROLE':
+            home = '/admin/home';
+            break;
+          case 'SUPERUSER_ROLE':
+            home = '/superuser/home';
+            break;
+          default:
+            home = '/assistant/role';
+        };
+
         res.status(200).json({
           ok: true,
           msg: "Login post recibido.",
@@ -267,7 +322,7 @@ function loginUser(req: Request, res: Response) {
           body: body,
           id: userDB._id,
           user: userDB,
-          menu: obtenerMenu(userDB.id_role),
+          menu: await obtenerMenu(userDB.tx_role, userDB.cd_pricing),
           home
         });
 
@@ -291,66 +346,37 @@ function loginUser(req: Request, res: Response) {
 
 }
 
-function obtenerMenu(id_role: string) {
-  var menu = [];
+function obtenerMenu(txRole: string, cdPricing: number = 0) {
+  return new Promise((resolve, reject) => {
+    var cdRole: number[] = [];
+    switch (txRole) {
+      case 'ASSISTANT_ROLE':
+        cdRole = [0]; // assistant
+        break;
+      case 'ADMIN_ROLE':
+        cdRole = [0, 1]; // assistant && admin
+        break;
+      case 'SUPERUSER_ROLE':
+        cdRole = [2]; // superuser
+    }
 
-  if ((id_role === "ASSISTANT_ROLE") || (id_role === "ADMIN_ROLE")) {
-    menu.push({
-      titulo: "Asistente",
-      icon: "mdi mdi-headset",
-      submenu: [
-        { titulo: "Home", url: "/assistant/home", icon: "mdi mdi-home" },
-        { titulo: "Dashboard", url: "/assistant/dashboard", icon: "mdi mdi-monitor-dashboard" },
-        { titulo: "Escritorio", url: "/assistant/desktop", icon: "mdi mdi-monitor-cellphone-star" },
-      ]
-    }); // unshift lo coloca al princio del array, push lo coloca al final.
-  }
+    Menu.find({ cd_role: { $in: cdRole } }).then((menuDB) => {
+      for (let menu of menuDB) {
+        menu.ar_submenu = menu.ar_submenu.filter(submenu => submenu.cd_pricing <= cdPricing)
+      }
+      resolve(menuDB);
+    }).catch(() => {
+      reject([])
+    })
 
-  if (id_role === "ADMIN_ROLE") {
-    menu.push({
-      titulo: "Administrador",
-      icon: "mdi mdi-police-badge-outline",
-      submenu: [
-        { titulo: "Home", url: "/admin/home", icon: "home" },
-        { titulo: "Mi Perfil", url: "/admin/profile", icon: "mdi mdi-face" },
-        { titulo: "Comercios", url: "/admin/companies", icon: "mdi mdi-storefront-outline" },
-        { titulo: "Asistentes", url: "/admin/assistants", icon: "mdi mdi-account-multiple-plus-outline" },
-        { titulo: "Escritorios", url: "/admin/desktops", icon: "mdi mdi-monitor-cellphone-star" },
-        { titulo: "Skills", url: "/admin/skills", icon: "mdi mdi-list-status" },
-        { titulo: "Turnos", url: "/admin/tickets", icon: "mdi mdi-bookmark-outline" },
-        { titulo: "Dashboard", url: "/admin/dashboard", icon: "mdi mdi-monitor-dashboard" },
-
-      ]
-    }); // unshift lo coloca al princio del array, push lo coloca al final.
-  }
-
-  if (id_role === "SUPERUSER_ROLE") {
-    menu.push({
-      titulo: "Super Usuario",
-      icon: "mdi mdi-headset",
-      submenu: [
-        { titulo: "Usuarios", url: "/superuser/users", icon: "mdi mdi-account-multiple-plus" },
-        { titulo: "Empresas", url: "/superuser/company", icon: "mdi mdi-city" },
-        { titulo: "Turnos", url: "/superuser/tickets", icon: "mdi mdi-table-large" },
-        { titulo: "Metricas", url: "/superuser/metrics", icon: "mdi mdi-console" }
-      ]
-    }); // unshift lo coloca al princio del array, push lo coloca al final.
-  }
-
-
-
-  return menu;
+  })
 }
 
 function testData(req: Request, res: Response) {
 
-  var user = User.findOne({tx_email: 'matiasfrith@gmail.com'}, (err, userDB) => {
-    return res.json({data: userDB?.getData()});
-    
-    
+  var user = User.findOne({ tx_email: 'matiasfrith@gmail.com' }, (err, userDB) => {
+    return res.json({ data: userDB?.getData() });
   })
-  
-
 }
 
 export = {

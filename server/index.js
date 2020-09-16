@@ -21,6 +21,7 @@ const assistant_routes_1 = __importDefault(require("./routes/assistant.routes"))
 const notification_routes_1 = __importDefault(require("./routes/notification.routes"));
 const indicator_routes_1 = __importDefault(require("./routes/indicator.routes"));
 const metric_routes_1 = __importDefault(require("./routes/metric.routes"));
+const superuser_routes_1 = __importDefault(require("./routes/superuser.routes"));
 const environment_1 = __importDefault(require("./global/environment"));
 // SINGLETON
 // const server = new Server();
@@ -54,13 +55,12 @@ server.app.use('/a', assistant_routes_1.default);
 server.app.use('/n', notification_routes_1.default);
 server.app.use('/m', metric_routes_1.default);
 server.app.use('/i', indicator_routes_1.default);
+server.app.use('/su', superuser_routes_1.default);
 server.start(() => {
     console.log(`Servidor corriendo en el puerto ${server.port}`); // ES lo mismo que que ${ SERVER_PORT }
 });
 // MONGO DB
-mongoose_1.default
-    // .connect('mongodb://localhost:27017/webturnos', {
-    .connect(environment_1.default.DB_CONN_STR, {
+mongoose_1.default.connect(environment_1.default.DB_CONN_STR, {
     useNewUrlParser: true,
     useCreateIndex: true,
     useUnifiedTopology: true,

@@ -17,6 +17,8 @@ import assistantRoutes from './routes/assistant.routes';
 import notificationRoutes from './routes/notification.routes';
 import indicatorRoutes from './routes/indicator.routes';
 import metricRoutes from './routes/metric.routes';
+import superuserRoutes from './routes/superuser.routes';
+
 
 
 
@@ -59,7 +61,7 @@ server.app.use('/a', assistantRoutes);
 server.app.use('/n', notificationRoutes);
 server.app.use('/m', metricRoutes);
 server.app.use('/i', indicatorRoutes);
-
+server.app.use('/su', superuserRoutes);
 
 
 server.start(() => {
@@ -67,9 +69,7 @@ server.start(() => {
 });
 
 // MONGO DB
-mongoose
-	// .connect('mongodb://localhost:27017/webturnos', {
-	.connect(environment.DB_CONN_STR, {
+mongoose.connect(environment.DB_CONN_STR, {
 		useNewUrlParser: true,
 		useCreateIndex: true,
 		useUnifiedTopology: true,

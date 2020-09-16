@@ -13,15 +13,18 @@ self.addEventListener('install', e => {
       return cache.addAll([
         '/',
         '/index.html',
-        '/5.c19675eff624567e5749.js',
-        '/6.306d6c1c8cab1c3de5f1.js',
-        '/7.c7287b4d5404e8bac258.js',
-        '/8.11983ae92cf0b2eb4998.js',
+        '/5.d2b27ba9c47487c871c1.js',
+        '/6.142a962e3a6e9601c59d.js',
+        '/7.97097b7957847a7b0c7c.js',
+        '/8.2f762bc19065b999db9e.js',
+        '/9.18e71f06b8458f000cf3.js',
         '/common.14facb5e31e9f97fc6b0.js',
-        '/main.a7e0161c97b2473ebf00.js',
+        '/main.77725926c4cce50e6c13.js',
+        '/myticket-background.24387b8acb702323a6b6.png',
         '/polyfills.5aab4676029f8f7a1213.js',
-        '/runtime.083bbdb65cb149e1a832.js',
-        '/styles.f2d965552a37a5e85d05.css'
+        '/runtime.8bdb8f0e8a1143583065.js',
+        '/styles.50d48f2b59286b38f8c2.css',
+
       ])
     })
     .catch(() => {
