@@ -19,12 +19,11 @@ self.addEventListener('install', e => {
         '/8.2f762bc19065b999db9e.js',
         '/9.18e71f06b8458f000cf3.js',
         '/common.14facb5e31e9f97fc6b0.js',
-        '/main.77725926c4cce50e6c13.js',
+        '/main.da48a7763d91c8c0d893.js',
         '/myticket-background.24387b8acb702323a6b6.png',
         '/polyfills.5aab4676029f8f7a1213.js',
         '/runtime.8bdb8f0e8a1143583065.js',
         '/styles.50d48f2b59286b38f8c2.css',
-
       ])
     })
     .catch(() => {

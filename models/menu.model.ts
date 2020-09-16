@@ -5,6 +5,7 @@ const menuSchema = new Schema({
     cd_role: { type: Number, required: [true, 'El cd_role es necesario'] },
     tx_titulo: { type: String, required: [true, 'El tx_titulo es necesario'] },
     tx_icon: { type: String, required: [true, 'El tx_icon es necesario'] },
+    tx_url: { type: String, required: [true, 'El tx_url es necesario'] },
     ar_submenu: { type: [{
         cd_pricing: { type: Number, required: [true, 'El cd_pricing es necesario'] },
         tx_titulo: { type: String, required: [true, 'El tx_titulo es necesario'] },
