@@ -5,7 +5,6 @@ import Token from '../classes/token';
 import environment from '../global/environment';
 
 import { User } from '../models/user.model';
-import { Skill } from '../models/skill.model';
 import { Menu } from '../models/menu.model';
 
 // Google Login
@@ -221,6 +220,7 @@ async function loginGoogle(req: Request, res: Response) {
 
               var token = Token.getJwtToken({ user });
               await obtenerMenu(user.tx_role, user.cd_pricing).then(menu => {
+
                 res.status(200).json({
                   ok: true,
                   msg: 'Usuario creado y logueado correctamente',
@@ -347,6 +347,7 @@ function loginUser(req: Request, res: Response) {
 }
 
 function obtenerMenu(txRole: string, cdPricing: number = 0) {
+
   return new Promise((resolve, reject) => {
     var cdRole: number[] = [];
     switch (txRole) {
@@ -360,11 +361,26 @@ function obtenerMenu(txRole: string, cdPricing: number = 0) {
         cdRole = [2]; // superuser
     }
 
-    Menu.find({ cd_role: { $in: cdRole } }).then((menuDB) => {
-      for (let menu of menuDB) {
-        menu.ar_submenu = menu.ar_submenu.filter(submenu => submenu.cd_pricing <= cdPricing)
+    let items: any[] = [];
+    let subitems: any[] = [];
+
+    Menu.find({cd_role: { $in: cdRole } }).then((menuDB) => {
+
+      items = menuDB.filter(item => item.id_parent === null);
+      subitems = menuDB.filter(item => item.id_parent !== null);
+      
+      // rompo la referencia la objeto de mongoose menuDB 
+      let itemsNew = [...items.map((item) => {
+        return { ...item._doc };
+      })]
+
+      for (let item of itemsNew) {
+        item.subitems = subitems.filter(subitem =>  String(item._id) === String(subitem.id_parent));
       }
-      resolve(menuDB);
+
+      resolve(itemsNew);
+
+
     }).catch(() => {
       reject([])
     })

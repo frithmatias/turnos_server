@@ -9,6 +9,9 @@ import SuperuserController from '../controllers/superuser.controller';
 // ROUTES
 const superuserRoutes = Router();
 
-superuserRoutes.get('/readmenus', mdAuth.verificaToken, SuperuserController.readMenus);
+superuserRoutes.post('/createmenu', mdAuth.verificaToken, SuperuserController.createMenu);
+superuserRoutes.get('/readmenu', mdAuth.verificaToken, SuperuserController.readMenu);
+superuserRoutes.post('/updatemenu', mdAuth.verificaToken, SuperuserController.updateMenu);
+superuserRoutes.delete('/deletemenu/:idMenu', mdAuth.verificaToken, SuperuserController.deleteMenu);
 
 export default superuserRoutes;

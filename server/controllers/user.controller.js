@@ -309,11 +309,19 @@ function obtenerMenu(txRole, cdPricing = 0) {
             case 'SUPERUSER_ROLE':
                 cdRole = [2]; // superuser
         }
+        let items = [];
+        let subitems = [];
         menu_model_1.Menu.find({ cd_role: { $in: cdRole } }).then((menuDB) => {
-            for (let menu of menuDB) {
-                menu.ar_submenu = menu.ar_submenu.filter(submenu => submenu.cd_pricing <= cdPricing);
+            items = menuDB.filter(item => item.id_parent === null);
+            subitems = menuDB.filter(item => item.id_parent !== null);
+            // rompo la referencia la objeto de mongoose menuDB 
+            let itemsNew = [...items.map((item) => {
+                    return Object.assign({}, item._doc);
+                })];
+            for (let item of itemsNew) {
+                item.subitems = subitems.filter(subitem => String(item._id) === String(subitem.id_parent));
             }
-            resolve(menuDB);
+            resolve(itemsNew);
         }).catch(() => {
             reject([]);
         });

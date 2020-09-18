@@ -8,6 +8,7 @@ import { Session } from '../models/session.model';
 // Assistant && Session Methods
 // ========================================================
 
+// crud
 function createAssistant(req: Request, res: Response) {
 
     var body = req.body;
@@ -38,45 +39,6 @@ function createAssistant(req: Request, res: Response) {
     });
 }
 
-function readAssistantsUser(req: Request, res: Response) {
-    // obtiene todos los asistentes de todas las empresas de un usuario
-
-    let idUser = req.params.idUser;
-    Company.find({ id_user: idUser }).then(companiesDB => {
-        return companiesDB.map(data => data._id) // solo quiero los _id
-    }).then(resp => {
-        User
-            .find({ $or: [{ '_id': idUser }, { id_company: { $in: resp } }] })
-            .populate('id_company').then(usersDB => {
-                if (!usersDB) {
-                    return res.status(400).json({
-                        ok: false,
-                        msg: 'No existen asistentes para la empresa seleccionada',
-                        users: null
-                    })
-                }
-                return res.status(200).json({
-                    ok: true,
-                    msg: 'Asistentes obtenidos correctamente',
-                    users: usersDB
-                })
-            }).catch(() => {
-                return res.status(500).json({
-                    ok: false,
-                    msg: 'Error al consultar los asistentes para las empresas del user',
-                    users: null
-                })
-            }).catch(() => {
-                return res.status(500).json({
-                    ok: false,
-                    msg: 'Error al consultar las empresas del user',
-                    users: null
-                })
-            })
-    })
-
-}
-
 function readAssistants(req: Request, res: Response) {
     let idCompany = req.params.idCompany;
 
@@ -101,36 +63,6 @@ function readAssistants(req: Request, res: Response) {
                 users: null
             })
         })
-
-
-}
-
-function readActiveSessionsBySkill(req: Request, res: Response) {
-    let idSkill = req.params.idSkill;
-    let today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
-    User.find({ id_skills: { $elemMatch: idSkill } }).then(companiesDB => {
-        return companiesDB.map(data => data._id) // solo quiero un array con los _id
-    }).then(idUsers => {
-        Session.find({fc_start: {$gt: today}, fc_end: null, id_assistant: {$in: idUsers}}).then(sessionsDB => {
-            return res.status(200).json({
-                ok: true,
-                msg: 'Sesiones obtenidas correctamente',
-                sessions: sessionsDB
-            })
-        }).catch(() => {
-            return res.status(400).json({
-                ok: false,
-                msg: 'Error al consultar las sesiones activas para los usuarios con el skill indicado',
-                sessions: null
-            })
-        })
-    }).catch(() => {
-        return res.status(400).json({
-            ok: false,
-            msg: 'Error al consultar los usuarios con el skill indicado',
-            sessions: null
-        })
-    })
 
 
 }
@@ -182,6 +114,76 @@ function deleteAssistant(req: Request, res: Response) {
             user: null
         })
     })
+}
+
+// auxiliar
+function readAssistantsUser(req: Request, res: Response) {
+    // obtiene todos los asistentes de todas las empresas de un usuario
+
+    let idUser = req.params.idUser;
+    Company.find({ id_user: idUser }).then(companiesDB => {
+        return companiesDB.map(data => data._id) // solo quiero los _id
+    }).then(resp => {
+        User
+            .find({ $or: [{ '_id': idUser }, { id_company: { $in: resp } }] })
+            .populate('id_company').then(usersDB => {
+                if (!usersDB) {
+                    return res.status(400).json({
+                        ok: false,
+                        msg: 'No existen asistentes para la empresa seleccionada',
+                        users: null
+                    })
+                }
+                return res.status(200).json({
+                    ok: true,
+                    msg: 'Asistentes obtenidos correctamente',
+                    users: usersDB
+                })
+            }).catch(() => {
+                return res.status(500).json({
+                    ok: false,
+                    msg: 'Error al consultar los asistentes para las empresas del user',
+                    users: null
+                })
+            }).catch(() => {
+                return res.status(500).json({
+                    ok: false,
+                    msg: 'Error al consultar las empresas del user',
+                    users: null
+                })
+            })
+    })
+
+}
+
+function readActiveSessionsBySkill(req: Request, res: Response) {
+    let idSkill = req.params.idSkill;
+    let today = new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime();
+    User.find({ id_skills: { $elemMatch: idSkill } }).then(companiesDB => {
+        return companiesDB.map(data => data._id) // solo quiero un array con los _id
+    }).then(idUsers => {
+        Session.find({fc_start: {$gt: today}, fc_end: null, id_assistant: {$in: idUsers}}).then(sessionsDB => {
+            return res.status(200).json({
+                ok: true,
+                msg: 'Sesiones obtenidas correctamente',
+                sessions: sessionsDB
+            })
+        }).catch(() => {
+            return res.status(400).json({
+                ok: false,
+                msg: 'Error al consultar las sesiones activas para los usuarios con el skill indicado',
+                sessions: null
+            })
+        })
+    }).catch(() => {
+        return res.status(400).json({
+            ok: false,
+            msg: 'Error al consultar los usuarios con el skill indicado',
+            sessions: null
+        })
+    })
+
+
 }
 
 export = {
